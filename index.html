@@ -69,6 +69,12 @@ select { font-size: 13px; padding: 5px 10px; border-radius: var(--radius); borde
 .upload-icon { font-size: 36px; margin-bottom: 0.5rem; }
 .upload-text { font-size: 14px; color: var(--text2); margin-bottom: 0.3rem; }
 .upload-hint { font-size: 12px; color: var(--text3); }
+.format-help { font-size: 13px; color: var(--text2); background: var(--bg2); border-radius: var(--radius); padding: 10px 14px; margin: -0.75rem 0 1.5rem; }
+.format-help summary { cursor: pointer; font-weight: 500; color: var(--text); }
+.format-help p { margin: 8px 0; line-height: 1.6; }
+.format-table { border-collapse: collapse; margin-bottom: 10px; background: var(--bg); font-size: 12px; }
+.format-table th, .format-table td { border: 0.5px solid var(--border2); padding: 4px 10px; text-align: left; }
+.format-table th { font-weight: 500; color: var(--text); }
 .decks-header { font-size: 13px; font-weight: 500; color: var(--text2); margin-bottom: 10px; }
 .deck-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
 .deck-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
@@ -81,13 +87,13 @@ select { font-size: 13px; padding: 5px 10px; border-radius: var(--radius); borde
 /* モード選択画面 */
 .select-header { display: flex; align-items: center; gap: 10px; margin-bottom: 2rem; }
 .select-deck-name { font-size: 16px; font-weight: 500; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.mode-cards { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 1.5rem; }
-.mode-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem 1.5rem; cursor: pointer; display: flex; align-items: center; gap: 1rem; transition: border-color 0.15s, background 0.15s; }
+.mode-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1.5rem; }
+.mode-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.1rem; cursor: pointer; display: flex; align-items: flex-start; gap: 1rem; transition: border-color 0.15s, background 0.15s; }
 .mode-card:hover { background: var(--bg2); border-color: var(--border2); }
 .mode-card-icon { font-size: 28px; flex-shrink: 0; }
 .mode-card-body { flex: 1; }
 .mode-card-title { font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 3px; }
-.mode-card-desc { font-size: 12px; color: var(--text2); }
+.mode-card-desc { font-size: 12px; color: var(--text2); line-height: 1.5; }
 .select-unit-row { display: flex; gap: 8px; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; }
 .select-unit-row label { font-size: 13px; color: var(--text2); }
 /* 再開カード */
@@ -106,13 +112,15 @@ select { font-size: 13px; padding: 5px 10px; border-radius: var(--radius); borde
 .deck-progress-label { font-size: 11px; color: var(--text2); display: flex; justify-content: space-between; }
 
 /* テスト画面 */
-.test-header { display: flex; align-items: center; gap: 10px; margin-bottom: 1.25rem; }
-.test-title { font-size: 16px; font-weight: 500; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1.25rem; }
-.stat { background: var(--bg2); border-radius: var(--radius); padding: 0.75rem; text-align: center; }
-.stat-num { font-size: 22px; font-weight: 500; }
-.stat-label { font-size: 11px; color: var(--text2); margin-top: 2px; }
-.filters { display: flex; gap: 8px; margin-bottom: 1.25rem; flex-wrap: wrap; align-items: center; }
+.test-header { display: flex; align-items: center; gap: 10px; margin-bottom: 1rem; }
+.test-title-wrap { flex: 1; min-width: 0; }
+.test-title { font-size: 16px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.test-mode-label { font-size: 12px; color: var(--text2); }
+.settings-btn.open { background: var(--bg2); }
+.settings-panel { background: var(--bg2); border-radius: var(--radius-lg); padding: 12px; margin-bottom: 1rem; }
+.settings-panel .mode-tabs { margin-bottom: 0; }
+.settings-panel .tab.active { background: var(--bg); }
+.filters { display: flex; gap: 8px; margin-bottom: 0.75rem; flex-wrap: wrap; align-items: center; }
 .filters label { font-size: 13px; color: var(--text2); }
 .mode-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1.25rem; }
 .mode-tabs .tab { white-space: nowrap; }
@@ -121,22 +129,31 @@ select { font-size: 13px; padding: 5px 10px; border-radius: var(--radius); borde
 .progress-wrap { margin-bottom: 1.25rem; }
 .progress-bar { height: 4px; background: var(--bg2); border-radius: 2px; overflow: hidden; }
 .progress-fill { height: 100%; background: var(--green); border-radius: 2px; transition: width 0.3s; }
-.progress-label { font-size: 12px; color: var(--text2); margin-top: 4px; text-align: right; }
+.progress-row { display: flex; justify-content: space-between; font-size: 13px; color: var(--text2); margin-top: 6px; }
+.score { display: flex; gap: 12px; font-weight: 500; }
+.score-ok { color: var(--green); }
+.score-ng { color: var(--red); }
 .card-wrap { perspective: 800px; margin: 0 auto 1.5rem; }
-.card { position: relative; width: 100%; height: 190px; transform-style: preserve-3d; transition: transform 0.45s ease; cursor: pointer; border-radius: var(--radius-lg); }
+/* 2つの面を同じマス目に重ね、文字が多いときは高さが伸びるようにする */
+.card { position: relative; width: 100%; display: grid; transform-style: preserve-3d; transition: transform 0.45s ease; cursor: pointer; border-radius: var(--radius-lg); }
 .card.flipped { transform: rotateY(180deg); }
-.face { position: absolute; inset: 0; backface-visibility: hidden; border-radius: var(--radius-lg); border: 0.5px solid var(--border); background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.5rem; }
+.face { grid-area: 1 / 1; min-height: 190px; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: var(--radius-lg); border: 0.5px solid var(--border); background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.5rem; transition: border-color 0.15s; }
 .face-back { transform: rotateY(180deg); background: var(--bg2); }
-.word { font-size: 28px; font-weight: 500; text-align: center; }
+.card-wrap[data-swipe="ok"] .face { border: 2px solid var(--green); }
+.card-wrap[data-swipe="ng"] .face { border: 2px solid var(--red); }
+.word { font-size: 28px; font-weight: 500; text-align: center; overflow-wrap: anywhere; }
 .unit-tag { font-size: 11px; color: var(--text3); margin-top: 6px; }
-.hint { font-size: 12px; color: var(--text3); margin-top: 8px; }
-.meaning { font-size: 24px; font-weight: 500; text-align: center; }
+.hint { font-size: 12px; color: var(--text3); margin-top: 8px; text-align: center; }
+.meaning { font-size: 24px; font-weight: 500; text-align: center; overflow-wrap: anywhere; }
+.speak-btn { font-size: 16px; padding: 2px 8px; margin-top: 8px; border-color: var(--border); line-height: 1.4; }
+.speak-inline { font-size: 13px; padding: 0 6px; margin: 0 0 0 6px; vertical-align: middle; }
 .controls { display: flex; gap: 10px; justify-content: center; margin-bottom: 1.25rem; flex-wrap: wrap; }
 .btn-success { border-color: var(--green); color: var(--green); }
 .btn-danger { border-color: var(--red); color: var(--red); }
 .quiz-question-wrap { max-width: 500px; margin: 0 auto 1.25rem; text-align: center; }
 .quiz-unit { font-size: 11px; color: var(--text3); margin-bottom: 6px; }
-.quiz-question { font-size: 26px; font-weight: 500; min-height: 48px; }
+.quiz-question { font-size: 26px; font-weight: 500; min-height: 48px; overflow-wrap: anywhere; }
+.next-btn { margin-left: 10px; }
 .quiz-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 500px; margin: 0 auto 1rem; }
 .option { padding: 14px 12px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: var(--bg); cursor: pointer; font-size: 15px; font-family: inherit; text-align: center; color: var(--text); transition: background 0.15s; }
 .option:hover { background: var(--bg2); }
@@ -165,7 +182,7 @@ select { font-size: 13px; padding: 5px 10px; border-radius: var(--radius); borde
 .timer-track { fill: none; stroke: var(--bg3); stroke-width: 5; }
 .timer-bar  { fill: none; stroke-width: 5; stroke-linecap: round; transition: stroke-dashoffset 0.1s linear, stroke 0.3s; }
 .timer-label { font-size: 22px; font-weight: 500; fill: var(--text); dominant-baseline: middle; text-anchor: middle; }
-.timer-card-question { text-align: center; font-size: 28px; font-weight: 500; margin-bottom: 6px; min-height: 44px; }
+.timer-card-question { text-align: center; font-size: 28px; font-weight: 500; margin-bottom: 6px; min-height: 44px; overflow-wrap: anywhere; }
 .timer-card-unit { text-align: center; font-size: 11px; color: var(--text3); margin-bottom: 1.5rem; }
 .timer-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 500px; margin: 0 auto 1rem; }
 .timer-feedback { text-align: center; min-height: 28px; font-size: 14px; margin-bottom: 0.5rem; }
@@ -175,7 +192,7 @@ select { font-size: 13px; padding: 5px 10px; border-radius: var(--radius); borde
 .timeout-answer { font-size: 20px; color: var(--text2); margin-bottom: 1.5rem; }
 
 /* 綴り入力モード */
-.spell-question { text-align: center; font-size: 26px; font-weight: 500; margin-bottom: 8px; min-height: 44px; }
+.spell-question { text-align: center; font-size: 26px; font-weight: 500; margin-bottom: 8px; min-height: 44px; overflow-wrap: anywhere; }
 .spell-unit-tag { text-align: center; font-size: 11px; color: var(--text3); margin-bottom: 0.5rem; }
 .spell-hint { font-size: 15px; letter-spacing: 6px; text-align: center; color: var(--text2); font-family: monospace; margin-bottom: 1.25rem; min-height: 28px; }
 .spell-input-wrap { display: flex; gap: 8px; max-width: 400px; margin: 0 auto 1rem; }
@@ -185,6 +202,17 @@ select { font-size: 13px; padding: 5px 10px; border-radius: var(--radius); borde
 .spell-input.wrong-anim  { border-color: var(--red);   background: var(--red-bg); }
 .spell-feedback { text-align: center; min-height: 26px; font-size: 14px; margin-bottom: 0.75rem; }
 .spell-hint-btn { font-size: 12px; padding: 4px 12px; }
+.spell-answer-row { text-align: center; min-height: 0; }
+
+/* 結果画面 */
+.result-panel { text-align: center; }
+.result-pct { font-size: 48px; font-weight: 600; line-height: 1.1; margin: 0.5rem 0 0.25rem; }
+.result-sub { font-size: 13px; color: var(--text2); margin-bottom: 1.25rem; }
+.result-sub span { margin: 0 6px; }
+.result-actions { display: flex; flex-direction: column; gap: 8px; max-width: 320px; margin: 0 auto 1.5rem; }
+.result-actions button { padding: 10px 16px; font-size: 14px; }
+.result-missed-title { font-size: 13px; font-weight: 500; color: var(--text2); text-align: left; margin-bottom: 6px; }
+.result-panel .word-table { text-align: left; }
 
 /* スマホ・タブレット */
 button, .option, .card, .mode-card, .deck-card, .upload-area { touch-action: manipulation; } /* ダブルタップ拡大を防ぐ */
@@ -197,10 +225,12 @@ button, .option, .card, .mode-card, .deck-card, .upload-area { touch-action: man
 @media (max-width: 480px) {
   /* iPhone で入力欄をタップしたときに画面が拡大されないよう 16px 以上にする */
   select, .list-search { font-size: 16px; }
-  .stats { gap: 6px; }
-  .stat { padding: 0.6rem 0.25rem; }
-  .stat-num { font-size: 20px; }
   .tab { padding: 6px 12px; }
+  .mode-card { padding: 0.85rem 0.9rem; }
+  .mode-card-title { font-size: 14px; }
+  .mode-card-desc { font-size: 11px; }
+  .word-table td { padding: 8px 6px; }
+  .word-table th { padding: 6px; }
 }
 
 </style>
@@ -222,6 +252,16 @@ button, .option, .card, .mode-card, .deck-card, .upload-area { touch-action: man
       <div class="upload-text">クリックしてXLSXファイルを選択（複数可）</div>
       <div class="upload-hint">英単語のまとめられたファイルを読み込ませてください</div>
     </div>
+    <details class="format-help" id="format-help">
+      <summary>読み込めるファイルの形式</summary>
+      <p>1枚目のシートの1行目に、次の3つの見出しを入れてください。2行目から単語を1行ずつ書きます。Unit は空欄でもかまいません。</p>
+      <table class="format-table">
+        <tr><th>Unit</th><th>英単語</th><th>日本語の意味</th></tr>
+        <tr><td>1</td><td>apple</td><td>りんご</td></tr>
+        <tr><td>1</td><td>run</td><td>走る</td></tr>
+      </table>
+      <button onclick="downloadTemplate()">📄 見本ファイルをダウンロード</button>
+    </details>
     <div id="decks-section" style="display:none;">
       <div class="decks-header">保存済みデータ</div>
       <div class="deck-grid" id="deck-grid"></div>
@@ -311,14 +351,14 @@ button, .option, .card, .mode-card, .deck-card, .upload-area { touch-action: man
   <div class="page" id="page-test">
     <div class="test-header">
       <button onclick="backToSelect()">← 戻る</button>
-      <div class="test-title" id="test-title"></div>
+      <div class="test-title-wrap">
+        <div class="test-title" id="test-title"></div>
+        <div class="test-mode-label" id="test-mode-label"></div>
+      </div>
+      <button class="settings-btn" id="settings-btn" onclick="toggleSettings()">⚙ 設定</button>
     </div>
-    <div class="stats" id="stats-wrap">
-      <div class="stat"><div class="stat-num" id="stat-total">0</div><div class="stat-label">総単語数</div></div>
-      <div class="stat"><div class="stat-num" id="stat-correct" style="color:var(--green)">0</div><div class="stat-label">正解</div></div>
-      <div class="stat"><div class="stat-num" id="stat-wrong" style="color:var(--red)">0</div><div class="stat-label">不正解</div></div>
-      <div class="stat"><div class="stat-num" id="stat-remain">0</div><div class="stat-label">残り</div></div>
-    </div>
+    <!-- Unit・方向・順序とモード切り替えは「設定」の中にしまう -->
+    <div class="settings-panel" id="settings-panel" style="display:none;">
     <div class="filters">
       <label>Unit:</label>
       <select id="unit-filter"><option value="">すべて</option></select>
@@ -343,9 +383,13 @@ button, .option, .card, .mode-card, .deck-card, .upload-area { touch-action: man
       <button class="tab" id="tab-wrong" onclick="setMode('wrong')">⚠️ 苦手</button>
       <button class="tab" id="tab-list" onclick="setMode('list')">一覧</button>
     </div>
+    </div>
     <div class="progress-wrap" id="progress-wrap">
       <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
-      <div class="progress-label" id="progress-label">0 / 0</div>
+      <div class="progress-row">
+        <span id="progress-label">0 / 0</span>
+        <span class="score"><span class="score-ok" id="stat-correct">✓ 0</span><span class="score-ng" id="stat-wrong">✗ 0</span></span>
+      </div>
     </div>
 
     <!-- フラッシュカード -->
@@ -354,11 +398,13 @@ button, .option, .card, .mode-card, .deck-card, .upload-area { touch-action: man
         <div class="card" id="flash-card" onclick="flipCard()">
           <div class="face">
             <div class="word" id="flash-front">-</div>
+            <button class="speak-btn" id="speak-front" onclick="event.stopPropagation(); speak(this.dataset.say)" title="発音を聞く" style="display:none;">🔊</button>
             <div class="unit-tag" id="flash-unit"></div>
-            <div class="hint"><span class="hint-kbd">クリック / Space で答えを見る &nbsp;·&nbsp; ← 不正解 &nbsp; → 正解 &nbsp; ↓ スキップ</span><span class="hint-touch">タップで答えを見る</span></div>
+            <div class="hint"><span class="hint-kbd">クリック / Space で答えを見る &nbsp;·&nbsp; ← 不正解 &nbsp; → 正解 &nbsp; ↓ スキップ</span><span class="hint-touch">タップで答えを見る &nbsp;·&nbsp; 右へスワイプで正解、左で不正解</span></div>
           </div>
           <div class="face face-back">
             <div class="meaning" id="flash-back">-</div>
+            <button class="speak-btn" id="speak-back" onclick="event.stopPropagation(); speak(this.dataset.say)" title="発音を聞く" style="display:none;">🔊</button>
           </div>
         </div>
       </div>
@@ -374,6 +420,7 @@ button, .option, .card, .mode-card, .deck-card, .upload-area { touch-action: man
       <div class="quiz-question-wrap">
         <div class="quiz-unit" id="quiz-unit-tag"></div>
         <div class="quiz-question" id="quiz-question">-</div>
+        <button class="speak-btn" id="speak-quiz" onclick="speak(this.dataset.say)" title="発音を聞く" style="display:none;">🔊</button>
       </div>
       <div class="quiz-options" id="quiz-options"></div>
       <div class="quiz-feedback" id="quiz-feedback"></div>
@@ -390,6 +437,7 @@ button, .option, .card, .mode-card, .deck-card, .upload-area { touch-action: man
         </svg>
       </div>
       <div class="timer-card-question" id="timer-question">-</div>
+      <div class="spell-answer-row"><button class="speak-btn" id="speak-timer" onclick="speak(this.dataset.say)" title="発音を聞く" style="display:none;">🔊</button></div>
       <div class="timer-card-unit" id="timer-unit-tag"></div>
       <div class="timer-options" id="timer-options"></div>
       <div class="timer-feedback" id="timer-feedback"></div>
@@ -411,12 +459,14 @@ button, .option, .card, .mode-card, .deck-card, .upload-area { touch-action: man
       <div class="spell-hint" id="spell-hint"></div>
       <div class="spell-input-wrap">
         <input class="spell-input" id="spell-input" type="text" autocomplete="off"
-          autocorrect="off" autocapitalize="off" spellcheck="false"
+          autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done"
           placeholder="英単語を入力..." oninput="onSpellInput()" onkeydown="onSpellKey(event)">
         <button class="spell-hint-btn" onclick="revealMoreHint()">ヒント+</button>
       </div>
       <div class="spell-feedback" id="spell-feedback"></div>
+      <div class="spell-answer-row"><button class="speak-btn" id="speak-spell" onclick="speak(this.dataset.say)" title="発音を聞く" style="display:none;">🔊</button></div>
       <div class="controls" style="margin-bottom:0;">
+        <button id="spell-check-btn" class="btn-success" onclick="checkSpell()">✓ 答え合わせ</button>
         <button id="spell-retry-btn" style="display:none;" onclick="retrySpell()">↩ もう一度</button>
         <button onclick="skipSpell()">→ スキップ</button>
       </div>
@@ -437,7 +487,20 @@ button, .option, .card, .mode-card, .deck-card, .upload-area { touch-action: man
       </table>
     </div>
 
-    <div class="controls" style="margin-top:0.25rem;">
+    <!-- 結果画面（最後の問題が終わったら表示） -->
+    <div class="result-panel" id="result-panel" style="display:none;">
+      <div style="font-size:14px;color:var(--text2);">結果</div>
+      <div class="result-pct" id="result-pct"></div>
+      <div class="result-sub" id="result-sub"></div>
+      <div class="result-actions">
+        <button class="btn-danger" id="result-retry-missed" onclick="retryMissed()">間違えた単語だけもう一度</button>
+        <button onclick="setMode(mode)">↺ 最初からもう一度</button>
+        <button onclick="backToSelect()">モード選択へ戻る</button>
+      </div>
+      <div id="result-missed"></div>
+    </div>
+
+    <div class="controls" id="test-controls" style="margin-top:0.25rem;">
       <button onclick="setMode(mode)">↺ リセット</button>
       <button onclick="saveAndQuit()" id="save-quit-btn">💾 中断して保存</button>
     </div>
@@ -534,7 +597,7 @@ document.getElementById('file-input').addEventListener('change', function(e) {
         const words = rows
           .filter(r => r['英単語'] && r['日本語の意味'])
           .map(r => ({ unit: r['Unit'] != null ? String(r['Unit']).trim() : '', en: String(r['英単語']).trim(), ja: String(r['日本語の意味']).trim() }));
-        if (!words.length) { alert(`「${file.name}」から単語データが見つかりませんでした。`); return; }
+        if (!words.length) { alert(`「${file.name}」から単語データが見つかりませんでした。\n1行目の見出しが「Unit」「英単語」「日本語の意味」になっているか確認してください。`); return; }
         const name = file.name.replace(/\.xlsx$/i, '');
         saveDeck(name, words);
       } catch (err) {
@@ -549,10 +612,40 @@ document.getElementById('file-input').addEventListener('change', function(e) {
   e.target.value = '';
 });
 
+// 見本ファイル（見出し＋例2行）をダウンロード
+function downloadTemplate() {
+  const ws = XLSX.utils.aoa_to_sheet([['Unit', '英単語', '日本語の意味'], ['1', 'apple', 'りんご'], ['1', 'run', '走る']]);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '単語');
+  XLSX.writeFile(wb, '単語テスト_見本.xlsx');
+}
+
+/* ---- 発音（ブラウザの読み上げ機能） ---- */
+const canSpeak = 'speechSynthesis' in window;
+function speak(text) {
+  if (!canSpeak || !text) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'en-US'; u.rate = 0.9;
+  speechSynthesis.speak(u);
+}
+// 画面上の🔊ボタンに読み上げる単語を設定する。text が空ならボタンを隠す
+function setSpeak(id, text) {
+  const b = document.getElementById(id);
+  b.dataset.say = text || '';
+  b.style.display = canSpeak && text ? '' : 'none';
+}
+// 表の中に置く🔊ボタン
+function speakBtn(text) {
+  return canSpeak ? `<button class="speak-btn speak-inline" data-say="${esc(text)}" onclick="speak(this.dataset.say)" title="発音を聞く">🔊</button>` : '';
+}
+
 /* ---- テスト状態 ---- */
 let allWords = [], session = [], idx = 0, correct = 0, wrong = 0;
+let missed = []; // このセッションで間違えた（スキップした）単語
 let mode = 'flash', flipped = false, quizAnswered = false;
 let currentDeckName = '', mastered = {}, wrongWords = {};
+const MODE_LABELS = { flash:'フラッシュカード', quiz:'4択クイズ', timer:'タイムアタック', spell:'綴り入力', wrong:'苦手単語', list:'一覧' };
 
 function openDeck(name) {
   const s = store();
@@ -581,7 +674,7 @@ function openDeck(name) {
   const snap = getSavedSession(name);
   const resumeArea = document.getElementById('resume-area');
   if (snap) {
-    const modeLabel = { flash:'フラッシュカード', quiz:'4択クイズ', timer:'タイムアタック', spell:'綴り入力', wrong:'苦手単語' }[snap.mode] || snap.mode;
+    const modeLabel = MODE_LABELS[snap.mode] || snap.mode;
     const pct = snap.session.length ? Math.round(snap.idx / snap.session.length * 100) : 0;
     document.getElementById('resume-desc').textContent =
       `${modeLabel} · ${snap.idx} / ${snap.session.length}問 (${pct}%) · 正解 ${snap.correct} / 不正解 ${snap.wrong}`;
@@ -603,10 +696,21 @@ function startMode(m) {
   document.getElementById('dir-filter').value = dir;
   document.getElementById('order-filter').value = ord;
 
-  document.getElementById('test-title').textContent = currentDeckName + (m === 'wrong' ? ' — 苦手単語' : '');
+  document.getElementById('test-title').textContent = currentDeckName;
   showPage('page-test');
   setMode(m);
 }
+
+/* ---- 設定パネルの開閉（開閉状態はブラウザに覚えておく） ---- */
+function setSettingsOpen(open) {
+  document.getElementById('settings-panel').style.display = open ? '' : 'none';
+  document.getElementById('settings-btn').classList.toggle('open', open);
+  try { localStorage.setItem('vq_settings_open', open ? '1' : '0'); } catch(e) {}
+}
+function toggleSettings() {
+  setSettingsOpen(document.getElementById('settings-panel').style.display === 'none');
+}
+try { if (localStorage.getItem('vq_settings_open') === '1') setSettingsOpen(true); } catch(e) {}
 
 // Unit の選択肢を作る。数字は数値として並べる（Unit2 → Unit10 の順）
 function fillUnitSelect(sel) {
@@ -637,19 +741,67 @@ function getFiltered() {
 
 function startSession() {
   clearSavedSession(currentDeckName);
-  session = getFiltered(); idx = 0; correct = 0; wrong = 0;
+  session = getFiltered(); idx = 0; correct = 0; wrong = 0; missed = [];
   updateStats(); showCard();
+}
+
+// 中断保存用: 通常モードは allWords の位置（同じ英単語が複数あっても区別できる）、苦手モードは en キー
+function toKey(w) { return mode === 'wrong' ? w.en : allWords.indexOf(w); }
+function fromKeys(keys, m) {
+  const pool = m === 'wrong'
+    ? Object.keys(wrongWords).map(en => ({ en, ja: wrongWords[en].ja, unit: wrongWords[en].unit }))
+    : allWords;
+  // 数値は allWords の位置、文字列は以前の形式（en キー）
+  return (keys || [])
+    .map(k => typeof k === 'number' && m !== 'wrong' ? allWords[k] : pool.find(w => w.en === k))
+    .filter(Boolean);
+}
+
+// 表示中のモードで、今の問題（idx）を表示する
+function showCurrent() {
+  if (mode === 'spell') showSpellCard();
+  else if (mode === 'timer') showTimerCard();
+  else if (mode === 'wrong') showWrongCard();
+  else showCard();
+}
+
+/* ---- 結果画面 ---- */
+function showResult() {
+  stopTimer();
+  ['flash','quiz','timer','spell','list'].forEach(id => { document.getElementById('mode-'+id).style.display = 'none'; });
+  document.getElementById('test-controls').style.display = 'none';
+  document.getElementById('result-panel').style.display = 'block';
+  const answered = correct + wrong;
+  const skipped = Math.max(0, session.length - answered);
+  document.getElementById('result-pct').textContent = answered ? Math.round(correct / answered * 100) + '%' : '—';
+  document.getElementById('result-sub').innerHTML =
+    `<span>全 ${session.length}問</span><span class="score-ok">✓ 正解 ${correct}</span><span class="score-ng">✗ 不正解 ${wrong}</span>` +
+    (skipped ? `<span>スキップ ${skipped}</span>` : '');
+  document.getElementById('result-retry-missed').style.display = missed.length ? '' : 'none';
+  document.getElementById('result-missed').innerHTML = missed.length ? `
+    <div class="result-missed-title">間違えた単語（${missed.length}）</div>
+    <table class="word-table"><tbody>${missed.map(w => `<tr>
+      <td class="word-en">${esc(w.en)}${speakBtn(w.en)}</td>
+      <td class="word-ja">${esc(w.ja)}</td>
+    </tr>`).join('')}</tbody></table>` : '<div style="font-size:14px;color:var(--green);">全問正解です 🎉</div>';
+}
+
+function retryMissed() {
+  const words = [...missed];
+  setModeUI(mode);
+  clearSavedSession(currentDeckName);
+  session = words; idx = 0; correct = 0; wrong = 0; missed = [];
+  updateStats(); showCurrent();
 }
 
 function saveAndQuit() {
   if (mode === 'list') { showPage('page-select'); return; }
   // 最後まで終わっているセッションは保存しない
   if (idx >= session.length) { clearSavedSession(currentDeckName); backToSelect(); return; }
-  // 苦手モードはsessionがallWordsと独立しているのでそのまま保存
   const snap = {
     mode,
-    // 通常モードは allWords の位置で保存（同じ英単語が複数あっても区別できる）。苦手モードは en キー
-    session: session.map(w => mode === 'wrong' ? w.en : allWords.indexOf(w)),
+    session: session.map(toKey),
+    missed: missed.map(toKey),
     idx, correct, wrong,
     unit: document.getElementById('unit-filter').value,
     dir:  document.getElementById('dir-filter').value,
@@ -666,15 +818,6 @@ function resumeSession() {
   const snap = getSavedSession(currentDeckName);
   if (!snap) return;
 
-  // session を単語オブジェクトに復元
-  const pool = snap.mode === 'wrong'
-    ? Object.keys(wrongWords).map(en => ({ en, ja: wrongWords[en].ja, unit: wrongWords[en].unit }))
-    : allWords;
-  // 数値は allWords の位置、文字列は以前の形式（en キー）
-  const orderedWords = snap.session
-    .map(k => typeof k === 'number' && snap.mode !== 'wrong' ? allWords[k] : pool.find(w => w.en === k))
-    .filter(Boolean);
-
   // UIのフィルターを復元
   const sel = document.getElementById('unit-filter');
   fillUnitSelect(sel);
@@ -682,34 +825,21 @@ function resumeSession() {
   document.getElementById('dir-filter').value = snap.dir || 'en-ja';
   document.getElementById('order-filter').value = snap.order || 'seq';
 
-  document.getElementById('test-title').textContent = currentDeckName + (snap.mode === 'wrong' ? ' — 苦手単語' : '');
+  document.getElementById('test-title').textContent = currentDeckName;
   showPage('page-test');
 
-  // 状態を直接復元
-  session = orderedWords;
+  // 状態を直接復元（session は単語オブジェクトに戻す）
+  stopTimer();
+  mode = snap.mode;
+  session = fromKeys(snap.session, snap.mode);
+  missed = fromKeys(snap.missed, snap.mode);
   idx = snap.idx;
   correct = snap.correct;
   wrong = snap.wrong;
-  mode = snap.mode;
 
-  // UI更新
-  ['flash','quiz','timer','spell','wrong','list'].forEach(id => {
-    document.getElementById('tab-'+id).classList.toggle('active', snap.mode === id);
-  });
-  document.getElementById('mode-flash').style.display = (snap.mode === 'flash' || snap.mode === 'wrong') ? 'block' : 'none';
-  ['quiz','timer','spell','list'].forEach(id => {
-    document.getElementById('mode-'+id).style.display = snap.mode === id ? 'block' : 'none';
-  });
-  const testOnly = snap.mode !== 'list';
-  document.getElementById('stats-wrap').style.display = testOnly ? 'grid' : 'none';
-  document.getElementById('progress-wrap').style.display = testOnly ? 'block' : 'none';
-  document.getElementById('test-filters').style.display = (testOnly && snap.mode !== 'wrong') ? '' : 'none';
-
+  setModeUI(mode);
   updateStats();
-  if (snap.mode === 'spell') showSpellCard();
-  else if (snap.mode === 'timer') showTimerCard();
-  else if (snap.mode === 'wrong') showWrongCard();
-  else showCard();
+  showCurrent();
 }
 
 function discardSavedSession() {
@@ -727,10 +857,8 @@ document.getElementById('dir-filter').addEventListener('change', () => {
 });
 
 function updateStats() {
-  document.getElementById('stat-total').textContent = session.length;
-  document.getElementById('stat-correct').textContent = correct;
-  document.getElementById('stat-wrong').textContent = wrong;
-  document.getElementById('stat-remain').textContent = Math.max(0, session.length - idx);
+  document.getElementById('stat-correct').textContent = '✓ ' + correct;
+  document.getElementById('stat-wrong').textContent = '✗ ' + wrong;
   const pct = session.length ? Math.round(idx / session.length * 100) : 0;
   document.getElementById('progress-fill').style.width = pct + '%';
   document.getElementById('progress-label').textContent = idx + ' / ' + session.length;
@@ -743,16 +871,8 @@ function back(w)  { return document.getElementById('dir-filter').value === 'en-j
 function showCard() {
   const w = cur();
   if (!w) {
-    if (mode === 'flash') {
-      document.getElementById('flash-front').textContent = '完了！';
-      document.getElementById('flash-back').textContent = '🎉';
-      document.getElementById('flash-unit').textContent = '';
-    } else {
-      document.getElementById('quiz-question').textContent = `完了！ 正解 ${correct} / ${session.length}`;
-      document.getElementById('quiz-options').innerHTML = '';
-      document.getElementById('quiz-feedback').textContent = '';
-    }
-    return;
+    flipped = false; document.getElementById('flash-card').classList.remove('flipped');
+    updateStats(); showResult(); return;
   }
   if (mode === 'flash') showFlash(w); else showQuiz(w);
   updateStats();
@@ -771,6 +891,7 @@ function recordCorrect(w) {
 }
 function recordWrong(w) {
   if (!w) return;
+  if (!missed.includes(w)) missed.push(w);
   wrongWords[w.en] = { ja: w.ja, unit: w.unit, streak: 0, count: (wrongWords[w.en]?.count || 0) + 1 };
   saveWrongWords(currentDeckName, wrongWords);
 }
@@ -784,6 +905,10 @@ function showFlash(w) {
     document.getElementById('flash-front').textContent = front(w);
     document.getElementById('flash-back').textContent = back(w);
     document.getElementById('flash-unit').textContent = w.unit;
+    // 🔊は英語が書かれている面にだけ出す
+    const enFront = document.getElementById('dir-filter').value === 'en-ja';
+    setSpeak('speak-front', enFront ? w.en : '');
+    setSpeak('speak-back', enFront ? '' : w.en);
   };
   if (flipped) {
     // 一瞬テキストを空にしてからアニメーション→セット
@@ -818,6 +943,7 @@ function showQuiz(w) {
   document.getElementById('quiz-question').textContent = front(w);
   document.getElementById('quiz-unit-tag').textContent = w.unit;
   document.getElementById('quiz-feedback').textContent = '';
+  setSpeak('speak-quiz', document.getElementById('dir-filter').value === 'en-ja' ? w.en : '');
   const ans = back(w);
   const opts = buildOptions(ans);
   document.getElementById('quiz-options').innerHTML = opts.map((o, i) =>
@@ -840,17 +966,30 @@ function answerQuiz(btn) {
   }
   else {
     btn.classList.add('wrong'); wrong++; recordWrong(currentW);
-    fb.textContent = '✗ 不正解'; fb.style.color = 'var(--red)';
+    fb.style.color = 'var(--red)';
   }
   idx++; updateStats();
-  scheduleNext(showCard, 1200);
+  // 正解は自動で次へ。不正解は正しい答えを確認できるよう「次へ」を押すまで待つ
+  if (chosen === ans) scheduleNext(showCard, 1200);
+  else waitForNext(fb, '✗ 不正解', showCard);
+}
+
+// 不正解のとき、フィードバック欄に「次へ」ボタンを出して待つ（Enter / Space でも進める）
+let awaitNext = null;
+function waitForNext(fb, msg, fn) {
+  fb.innerHTML = `${esc(msg)}<button class="next-btn" onclick="goNext()">次へ →</button>`;
+  awaitNext = fn;
+}
+function goNext() {
+  const fn = awaitNext;
+  awaitNext = null;
+  if (fn) fn();
 }
 
 /* ---- モード ---- */
-function setMode(m) {
-  stopTimer();
+// モードに合わせて画面の表示・非表示を切り替える（結果画面は閉じる）
+function setModeUI(m) {
   document.getElementById('timeout-overlay').style.display = 'none';
-  mode = m;
   ['flash','quiz','timer','spell','wrong','list'].forEach(id => {
     document.getElementById('tab-'+id).classList.toggle('active', m === id);
   });
@@ -860,9 +999,17 @@ function setMode(m) {
     document.getElementById('mode-'+id).style.display = m === id ? 'block' : 'none';
   });
   const testOnly = m !== 'list';
-  document.getElementById('stats-wrap').style.display = testOnly ? 'grid' : 'none';
   document.getElementById('progress-wrap').style.display = testOnly ? 'block' : 'none';
   document.getElementById('test-filters').style.display = (testOnly && m !== 'wrong') ? '' : 'none';
+  document.getElementById('result-panel').style.display = 'none';
+  document.getElementById('test-controls').style.display = testOnly ? '' : 'none';
+  document.getElementById('test-mode-label').textContent = MODE_LABELS[m];
+}
+
+function setMode(m) {
+  stopTimer();
+  mode = m;
+  setModeUI(m);
   if (m === 'list') renderList();
   else if (m === 'spell') startSpellSession();
   else if (m === 'timer') startTimerSession();
@@ -879,7 +1026,9 @@ function startWrongSession() {
     document.getElementById('flash-back').textContent = '他のモードで練習しましょう';
     document.getElementById('flash-unit').textContent = '';
     document.getElementById('flash-card').classList.remove('flipped');
-    session = []; idx = 0; correct = 0; wrong = 0;
+    flipped = false;
+    setSpeak('speak-front', ''); setSpeak('speak-back', '');
+    session = []; idx = 0; correct = 0; wrong = 0; missed = [];
     updateStats(); return;
   }
   // 不正解回数が多い順にソート、最大50件
@@ -887,25 +1036,21 @@ function startWrongSession() {
     .sort((a, b) => (wrongWords[b].count || 1) - (wrongWords[a].count || 1))
     .slice(0, 50)
     .map(en => ({ en, ja: wrongWords[en].ja, unit: wrongWords[en].unit }));
-  idx = 0; correct = 0; wrong = 0;
+  idx = 0; correct = 0; wrong = 0; missed = [];
   updateStats(); showWrongCard();
 }
 
 function showWrongCard() {
   const w = cur();
+  if (!w) { flipped = false; document.getElementById('flash-card').classList.remove('flipped'); updateStats(); showResult(); return; }
   const card = document.getElementById('flash-card');
   const doSet = () => {
     flipped = false;
     card.classList.remove('flipped');
-    if (!w) {
-      document.getElementById('flash-front').textContent = '完了！ 苦手単語を克服中';
-      document.getElementById('flash-back').textContent = `正解 ${correct} / ${session.length}`;
-      document.getElementById('flash-unit').textContent = '';
-    } else {
-      document.getElementById('flash-front').textContent = w.en;
-      document.getElementById('flash-back').textContent = w.ja;
-      document.getElementById('flash-unit').textContent = w.unit + ' · 不正解 ' + (wrongWords[w.en]?.count || 1) + '回';
-    }
+    document.getElementById('flash-front').textContent = w.en;
+    document.getElementById('flash-back').textContent = w.ja;
+    document.getElementById('flash-unit').textContent = w.unit + ' · 不正解 ' + (wrongWords[w.en]?.count || 1) + '回';
+    setSpeak('speak-front', w.en); setSpeak('speak-back', '');
     updateStats();
   };
   if (flipped) {
@@ -931,7 +1076,7 @@ function renderList() {
     const wc = wrongWords[w.en]?.count || 0;
     const wcStr = wc > 0 ? `<span style="color:var(--red);font-size:12px;">✗ ${wc}</span>` : '<span style="color:var(--text3);font-size:12px;">—</span>';
     return `<tr>
-      <td class="word-en">${dot}${esc(w.en)}</td>
+      <td class="word-en">${dot}${esc(w.en)}${speakBtn(w.en)}</td>
       <td class="word-ja">${esc(w.ja)}</td>
       <td class="word-unit-col">${esc(w.unit)}</td>
       <td style="text-align:center;">${wcStr}</td>
@@ -954,28 +1099,23 @@ function scheduleNext(fn, ms) {
 function stopTimer() {
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
   if (pendingNext) { clearTimeout(pendingNext); pendingNext = null; }
+  awaitNext = null;
 }
 
 function startTimerSession() {
   stopTimer();
   clearSavedSession(currentDeckName);
-  session = getFiltered(); idx = 0; correct = 0; wrong = 0;
+  session = getFiltered(); idx = 0; correct = 0; wrong = 0; missed = [];
   updateStats(); showTimerCard();
 }
 
 function showTimerCard() {
   stopTimer();
   const w = cur();
-  if (!w) {
-    document.getElementById('timer-question').textContent = `完了！ 正解 ${correct} / ${session.length}`;
-    document.getElementById('timer-options').innerHTML = '';
-    document.getElementById('timer-feedback').textContent = '';
-    document.getElementById('timer-bar').style.strokeDashoffset = '0';
-    document.getElementById('timer-label').textContent = '';
-    return;
-  }
+  if (!w) { updateStats(); showResult(); return; }
   timerAnswered = false;
   document.getElementById('timer-question').textContent = front(w);
+  setSpeak('speak-timer', document.getElementById('dir-filter').value === 'en-ja' ? w.en : '');
   document.getElementById('timer-unit-tag').textContent = w.unit;
   document.getElementById('timer-feedback').textContent = '';
 
@@ -1016,10 +1156,12 @@ function answerTimer(btn) {
     fb.textContent = '✓ 正解！'; fb.style.color = 'var(--green)';
   } else {
     btn.classList.add('wrong'); wrong++; recordWrong(currentW);
-    fb.textContent = '✗ 不正解'; fb.style.color = 'var(--red)';
+    fb.style.color = 'var(--red)';
   }
   idx++; updateStats();
-  scheduleNext(showTimerCard, 1000);
+  // 正解は自動で次へ。不正解は「次へ」を押すまで待つ（タイマーは止まっている）
+  if (chosen === ans) scheduleNext(showTimerCard, 1000);
+  else waitForNext(fb, '✗ 不正解', showTimerCard);
 }
 
 function timeoutTimer(w, ans) {
@@ -1041,7 +1183,7 @@ let spellHintLevel = 0, spellWord = '', spellAnswered = false, spellIsRetry = fa
 
 function startSpellSession() {
   clearSavedSession(currentDeckName);
-  session = getFiltered(); idx = 0; correct = 0; wrong = 0;
+  session = getFiltered(); idx = 0; correct = 0; wrong = 0; missed = [];
   updateStats(); showSpellCard();
 }
 
@@ -1062,14 +1204,10 @@ function buildHint(word, level) {
 function showSpellCard() {
   spellAnswered = false; spellHintLevel = 0; spellIsRetry = false;
   document.getElementById('spell-retry-btn').style.display = 'none';
+  document.getElementById('spell-check-btn').style.display = '';
+  setSpeak('speak-spell', '');
   const w = cur();
-  if (!w) {
-    document.getElementById('spell-question').textContent = `完了！ 正解 ${correct} / ${session.length}`;
-    document.getElementById('spell-hint').textContent = '';
-    document.getElementById('spell-input').value = '';
-    document.getElementById('spell-feedback').textContent = '';
-    return;
-  }
+  if (!w) { updateStats(); showResult(); return; }
   spellWord = w.en;
   document.getElementById('spell-question').textContent = w.ja;
   document.getElementById('spell-unit-tag').textContent = w.unit;
@@ -1099,6 +1237,8 @@ function onSpellInput() {
     }
     spellIsRetry = false;
     document.getElementById('spell-retry-btn').style.display = 'none';
+    document.getElementById('spell-check-btn').style.display = 'none';
+    setSpeak('speak-spell', spellWord);
     const fb = document.getElementById('spell-feedback');
     fb.textContent = '✓ 正解！';
     fb.style.color = 'var(--green)';
@@ -1109,7 +1249,13 @@ function onSpellInput() {
 }
 
 function onSpellKey(e) {
-  if (e.key !== 'Enter' || spellAnswered) return;
+  if (e.key !== 'Enter') return;
+  checkSpell();
+}
+
+// 答え合わせ（Enter キーまたは「答え合わせ」ボタン）
+function checkSpell() {
+  if (spellAnswered || !cur()) return;
   const typed = document.getElementById('spell-input').value.toLowerCase().trim();
   if (!typed) return;
   if (typed === spellWord.toLowerCase()) { onSpellInput(); return; }
@@ -1122,9 +1268,11 @@ function onSpellKey(e) {
   fb.textContent = `✗ 正解: ${spellWord}`;
   fb.style.color = 'var(--red)';
   document.getElementById('spell-hint').textContent = spellWord;
-  // idx は進めず、もう一度ボタンを表示
+  // idx は進めて、「もう一度」ボタンを表示（押すと idx を戻して再挑戦）
   idx++; updateStats();
   document.getElementById('spell-retry-btn').style.display = '';
+  document.getElementById('spell-check-btn').style.display = 'none';
+  setSpeak('speak-spell', spellWord);
 }
 
 function retrySpell() {
@@ -1142,6 +1290,8 @@ function retrySpell() {
   inp.value = ''; inp.className = 'spell-input';
   document.getElementById('spell-feedback').textContent = '';
   document.getElementById('spell-retry-btn').style.display = 'none';
+  document.getElementById('spell-check-btn').style.display = '';
+  setSpeak('speak-spell', '');
   // 再挑戦で正解しても correct には加算しないフラグ
   spellIsRetry = true;
   updateStats();
@@ -1152,12 +1302,50 @@ function skipSpell() {
   stopTimer();
   if (!spellAnswered) {
     if (!cur()) return; // 完了後は何もしない
+    if (!missed.includes(cur())) missed.push(cur()); // 結果画面の「間違えた単語」に含める
     wrong++; idx++; updateStats();
   }
   showSpellCard();
 }
 
 renderDecks();
+
+// まだデッキがないときは、ファイル形式の説明を開いておく
+document.getElementById('format-help').open = !Object.keys(store()).length;
+
+/* ---- フラッシュカードのスワイプ（右: 正解 / 左: 不正解） ---- */
+(function() {
+  const wrap = document.querySelector('#mode-flash .card-wrap');
+  const THRESHOLD = 70;
+  let sx = 0, sy = 0, dx = 0, tracking = false;
+  const reset = () => {
+    wrap.style.transition = 'transform 0.2s';
+    wrap.style.transform = '';
+    wrap.dataset.swipe = '';
+  };
+  wrap.addEventListener('touchstart', e => {
+    if (e.touches.length !== 1 || !cur()) return;
+    sx = e.touches[0].clientX; sy = e.touches[0].clientY; dx = 0; tracking = true;
+    wrap.style.transition = 'none';
+  }, { passive: true });
+  wrap.addEventListener('touchmove', e => {
+    if (!tracking) return;
+    dx = e.touches[0].clientX - sx;
+    const dy = e.touches[0].clientY - sy;
+    // 縦方向の動きが大きいときはスクロールとみなしてやめる
+    if (Math.abs(dy) > Math.abs(dx) && Math.abs(dx) < 10) { tracking = false; reset(); return; }
+    wrap.style.transform = `translateX(${dx}px) rotate(${dx / 25}deg)`;
+    wrap.dataset.swipe = dx > THRESHOLD ? 'ok' : dx < -THRESHOLD ? 'ng' : '';
+  }, { passive: true });
+  const end = () => {
+    if (!tracking) return;
+    tracking = false;
+    reset();
+    if (Math.abs(dx) > THRESHOLD && cur()) markAnswer(dx > 0);
+  };
+  wrap.addEventListener('touchend', end);
+  wrap.addEventListener('touchcancel', () => { tracking = false; reset(); });
+})();
 
 /* ---- キーボードショートカット ---- */
 // 選択後にフォーカスを外し、そのままショートカットキーが使えるようにする
@@ -1178,6 +1366,10 @@ document.addEventListener('keydown', e => {
     if (e.key === 'ArrowRight' || e.key === 'o') markAnswer(true);
     if (e.key === 'ArrowLeft'  || e.key === 'x') markAnswer(false);
     if (e.key === 'ArrowDown'  || e.key === 's') skipCard();
+  }
+  if ((mode === 'quiz' || mode === 'timer') && awaitNext) {
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); goNext(); }
+    return;
   }
   if (mode === 'quiz' || mode === 'timer') {
     const sel = mode === 'quiz' ? '#quiz-options .option' : '#timer-options .option';
