@@ -1,0 +1,1116 @@
+<!--
+  単語テスト
+  XLSXを読み込んでフラッシュカード・4択クイズ・一覧表示ができる
+  ブラウザに保存され、次回以降ファイルなしで使える
+  ファイルごとに独立してテストできる
+-->
+
+<!-- version 1.0.0 (2026-06-19,claude) 基本的な機能の実装 -->
+<!-- version 2.0.0 (2026-06-29,claude) つづり、タイムアタック実装-->
+<!-- version 3.0.0 (2026-06-30,claude) 苦手単語モードとキーボード操作可能に -->
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>単語テスト</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #fff; --bg2: #f5f5f3; --bg3: #ebebea;
+  --text: #1a1a18; --text2: #6b6b68; --text3: #9e9e9b;
+  --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.22);
+  --green: #3B6D11; --green-bg: #EAF3DE;
+  --red: #A32D2D; --red-bg: #FCEBEB;
+  --radius: 8px; --radius-lg: 12px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1c1c1a; --bg2: #252523; --bg3: #2e2e2b;
+    --text: #f0ede8; --text2: #a0a09c; --text3: #6b6b68;
+    --border: rgba(255,255,255,0.12); --border2: rgba(255,255,255,0.22);
+    --green: #97C459; --green-bg: #173404;
+    --red: #F09595; --red-bg: #501313;
+  }
+}
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 1.5rem 1rem; }
+.container { max-width: 640px; margin: 0 auto; }
+h1 { font-size: 20px; font-weight: 500; margin-bottom: 1.25rem; }
+button { font-family: inherit; font-size: 13px; padding: 7px 16px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: transparent; cursor: pointer; color: var(--text); transition: background 0.1s, transform 0.05s; }
+button:hover { background: var(--bg2); }
+button:active { transform: scale(0.97); }
+select { font-size: 13px; padding: 5px 10px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: var(--bg); color: var(--text); cursor: pointer; }
+.page { display: none; }
+.page.active { display: block; }
+
+/* ホーム */
+.notice { font-size: 12px; color: var(--text2); background: var(--bg2); border-radius: var(--radius); padding: 8px 12px; margin-bottom: 1.25rem; line-height: 1.5; }
+.upload-area { border: 1.5px dashed var(--border2); border-radius: var(--radius-lg); padding: 2rem 1.5rem; text-align: center; cursor: pointer; background: var(--bg2); transition: background 0.15s; margin-bottom: 1.5rem; }
+.upload-area:hover { background: var(--bg3); }
+.upload-icon { font-size: 36px; margin-bottom: 0.5rem; }
+.upload-text { font-size: 14px; color: var(--text2); margin-bottom: 0.3rem; }
+.upload-hint { font-size: 12px; color: var(--text3); }
+.decks-header { font-size: 13px; font-weight: 500; color: var(--text2); margin-bottom: 10px; }
+.deck-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+.deck-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+.deck-card:hover { background: var(--bg2); border-color: var(--border2); }
+.deck-name { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 4px; word-break: break-all; }
+.deck-meta { font-size: 11px; color: var(--text3); margin-bottom: 10px; }
+.deck-actions { display: flex; gap: 6px; }
+.deck-actions button { font-size: 12px; padding: 4px 12px; }
+
+/* モード選択画面 */
+.select-header { display: flex; align-items: center; gap: 10px; margin-bottom: 2rem; }
+.select-deck-name { font-size: 16px; font-weight: 500; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mode-cards { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 1.5rem; }
+.mode-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem 1.5rem; cursor: pointer; display: flex; align-items: center; gap: 1rem; transition: border-color 0.15s, background 0.15s; }
+.mode-card:hover { background: var(--bg2); border-color: var(--border2); }
+.mode-card-icon { font-size: 28px; flex-shrink: 0; }
+.mode-card-body { flex: 1; }
+.mode-card-title { font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 3px; }
+.mode-card-desc { font-size: 12px; color: var(--text2); }
+.select-unit-row { display: flex; gap: 8px; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.select-unit-row label { font-size: 13px; color: var(--text2); }
+/* 再開カード */
+.resume-card { background: var(--bg); border: 1.5px solid var(--green); border-radius: var(--radius-lg); padding: 1.1rem 1.5rem; cursor: pointer; display: flex; align-items: center; gap: 1rem; transition: background 0.15s; margin-bottom: 1rem; }
+.resume-card:hover { background: var(--green-bg); }
+.resume-card-body { flex: 1; }
+.resume-card-title { font-size: 15px; font-weight: 500; color: var(--green); margin-bottom: 3px; }
+.resume-card-desc { font-size: 12px; color: var(--text2); }
+.resume-card-discard { font-size: 12px; padding: 4px 10px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: transparent; cursor: pointer; color: var(--text3); flex-shrink: 0; }
+.resume-card-discard:hover { color: var(--red); border-color: var(--red); background: var(--red-bg); }
+.btn-del { border-color: var(--red); color: var(--red); }
+.btn-del:hover { background: var(--red-bg); }
+.deck-progress-wrap { margin-bottom: 10px; }
+.deck-progress-bar { height: 5px; background: var(--bg3); border-radius: 3px; overflow: hidden; margin-bottom: 3px; }
+.deck-progress-fill { height: 100%; border-radius: 3px; transition: width 0.4s; background: var(--green); }
+.deck-progress-label { font-size: 11px; color: var(--text2); display: flex; justify-content: space-between; }
+
+/* テスト画面 */
+.test-header { display: flex; align-items: center; gap: 10px; margin-bottom: 1.25rem; }
+.test-title { font-size: 16px; font-weight: 500; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1.25rem; }
+.stat { background: var(--bg2); border-radius: var(--radius); padding: 0.75rem; text-align: center; }
+.stat-num { font-size: 22px; font-weight: 500; }
+.stat-label { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.filters { display: flex; gap: 8px; margin-bottom: 1.25rem; flex-wrap: wrap; align-items: center; }
+.filters label { font-size: 13px; color: var(--text2); }
+.mode-tabs { display: flex; gap: 6px; margin-bottom: 1.25rem; }
+.tab { font-size: 13px; padding: 6px 16px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: transparent; cursor: pointer; color: var(--text2); }
+.tab.active { background: var(--bg2); color: var(--text); font-weight: 500; }
+.progress-wrap { margin-bottom: 1.25rem; }
+.progress-bar { height: 4px; background: var(--bg2); border-radius: 2px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--green); border-radius: 2px; transition: width 0.3s; }
+.progress-label { font-size: 12px; color: var(--text2); margin-top: 4px; text-align: right; }
+.card-wrap { perspective: 800px; margin: 0 auto 1.5rem; }
+.card { position: relative; width: 100%; height: 190px; transform-style: preserve-3d; transition: transform 0.45s ease; cursor: pointer; border-radius: var(--radius-lg); }
+.card.flipped { transform: rotateY(180deg); }
+.face { position: absolute; inset: 0; backface-visibility: hidden; border-radius: var(--radius-lg); border: 0.5px solid var(--border); background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.5rem; }
+.face-back { transform: rotateY(180deg); background: var(--bg2); }
+.word { font-size: 28px; font-weight: 500; text-align: center; }
+.unit-tag { font-size: 11px; color: var(--text3); margin-top: 6px; }
+.hint { font-size: 12px; color: var(--text3); margin-top: 8px; }
+.meaning { font-size: 24px; font-weight: 500; text-align: center; }
+.controls { display: flex; gap: 10px; justify-content: center; margin-bottom: 1.25rem; flex-wrap: wrap; }
+.btn-success { border-color: var(--green); color: var(--green); }
+.btn-danger { border-color: var(--red); color: var(--red); }
+.quiz-question-wrap { max-width: 500px; margin: 0 auto 1.25rem; text-align: center; }
+.quiz-unit { font-size: 11px; color: var(--text3); margin-bottom: 6px; }
+.quiz-question { font-size: 26px; font-weight: 500; min-height: 48px; }
+.quiz-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 500px; margin: 0 auto 1rem; }
+.option { padding: 14px 12px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: var(--bg); cursor: pointer; font-size: 15px; font-family: inherit; text-align: center; color: var(--text); transition: background 0.15s; }
+.option:hover { background: var(--bg2); }
+.option.correct { border-color: var(--green); background: var(--green-bg); color: var(--green); }
+.option.wrong { border-color: var(--red); background: var(--red-bg); color: var(--red); }
+.quiz-feedback { text-align: center; min-height: 28px; font-size: 14px; margin-bottom: 0.5rem; }
+
+/* 一覧モード */
+.list-filters { display: flex; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; align-items: center; }
+.list-filters label { font-size: 13px; color: var(--text2); }
+.list-search { font-size: 13px; padding: 5px 10px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: var(--bg); color: var(--text); width: 160px; }
+.word-table { width: 100%; border-collapse: collapse; }
+.word-table th { font-size: 11px; font-weight: 500; color: var(--text2); text-align: left; padding: 6px 10px; border-bottom: 0.5px solid var(--border2); }
+.word-table td { font-size: 14px; padding: 9px 10px; border-bottom: 0.5px solid var(--border); vertical-align: middle; }
+.word-table tr:last-child td { border-bottom: none; }
+.word-table tr:hover td { background: var(--bg2); }
+.word-en { font-weight: 500; color: var(--text); }
+.word-ja { color: var(--text2); }
+.word-unit-col { font-size: 11px; color: var(--text3); white-space: nowrap; }
+.mastered-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--green); margin-right: 4px; vertical-align: middle; }
+.list-count { font-size: 12px; color: var(--text3); margin-bottom: 8px; }
+
+/* タイマーモード */
+.timer-ring-wrap { display: flex; justify-content: center; margin-bottom: 0.5rem; }
+.timer-svg { transform: rotate(-90deg); }
+.timer-track { fill: none; stroke: var(--bg3); stroke-width: 5; }
+.timer-bar  { fill: none; stroke-width: 5; stroke-linecap: round; transition: stroke-dashoffset 0.1s linear, stroke 0.3s; }
+.timer-label { font-size: 22px; font-weight: 500; fill: var(--text); dominant-baseline: middle; text-anchor: middle; }
+.timer-card-question { text-align: center; font-size: 28px; font-weight: 500; margin-bottom: 6px; min-height: 44px; }
+.timer-card-unit { text-align: center; font-size: 11px; color: var(--text3); margin-bottom: 1.5rem; }
+.timer-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 500px; margin: 0 auto 1rem; }
+.timer-feedback { text-align: center; min-height: 28px; font-size: 14px; margin-bottom: 0.5rem; }
+.timeout-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; z-index: 100; }
+.timeout-box { background: var(--bg); border-radius: var(--radius-lg); padding: 2rem; text-align: center; max-width: 320px; width: 90%; }
+.timeout-word { font-size: 26px; font-weight: 500; margin-bottom: 6px; }
+.timeout-answer { font-size: 20px; color: var(--text2); margin-bottom: 1.5rem; }
+
+/* 綴り入力モード */
+.spell-question { text-align: center; font-size: 26px; font-weight: 500; margin-bottom: 8px; min-height: 44px; }
+.spell-unit-tag { text-align: center; font-size: 11px; color: var(--text3); margin-bottom: 0.5rem; }
+.spell-hint { font-size: 15px; letter-spacing: 6px; text-align: center; color: var(--text2); font-family: monospace; margin-bottom: 1.25rem; min-height: 28px; }
+.spell-input-wrap { display: flex; gap: 8px; max-width: 400px; margin: 0 auto 1rem; }
+.spell-input { flex: 1; font-size: 18px; padding: 10px 14px; border-radius: var(--radius); border: 1px solid var(--border2); background: var(--bg); color: var(--text); font-family: monospace; letter-spacing: 2px; }
+.spell-input:focus { outline: none; border-color: var(--green); }
+.spell-input.correct-anim { border-color: var(--green); background: var(--green-bg); }
+.spell-input.wrong-anim  { border-color: var(--red);   background: var(--red-bg); }
+.spell-feedback { text-align: center; min-height: 26px; font-size: 14px; margin-bottom: 0.75rem; }
+.spell-hint-btn { font-size: 12px; padding: 4px 12px; }
+
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ホーム画面 -->
+  <div class="page active" id="page-home">
+    <h1>単語テスト</h1>
+    <div class="notice">XLSXを読み込むとブラウザに保存され、次回以降ファイルのロードしなくても使えます。ファイルごとに独立してテストできます。</div>
+    <div class="upload-area" onclick="document.getElementById('file-input').click()">
+      <input type="file" id="file-input" accept=".xlsx" style="display:none" multiple>
+      <div class="upload-icon">📂</div>
+      <div class="upload-text">クリックしてXLSXファイルを選択（複数可）</div>
+      <div class="upload-hint">英単語のまとめられたファイルを読み込ませてください</div>
+    </div>
+    <div id="decks-section" style="display:none;">
+      <div class="decks-header">保存済みデータ</div>
+      <div class="deck-grid" id="deck-grid"></div>
+    </div>
+  </div>
+
+  <!-- モード選択画面 -->
+  <div class="page" id="page-select">
+    <div class="select-header">
+      <button onclick="goHome()">← 戻る</button>
+      <div class="select-deck-name" id="select-deck-name"></div>
+    </div>
+    <div class="select-unit-row">
+      <label>Unit:</label>
+      <select id="select-unit-filter"><option value="">すべて</option></select>
+      <label style="margin-left:6px;">方向:</label>
+      <select id="select-dir-filter">
+        <option value="en-ja">英 → 日</option>
+        <option value="ja-en">日 → 英</option>
+      </select>
+      <label style="margin-left:6px;">順序:</label>
+      <select id="select-order-filter">
+        <option value="seq">順番</option>
+        <option value="random">ランダム</option>
+      </select>
+    </div>
+    <!-- 再開カード（保存済みセッションがあるとき表示） -->
+    <div id="resume-area" style="display:none;">
+      <div class="resume-card" onclick="resumeSession()">
+        <div class="resume-card-body">
+          <div class="resume-card-title">▶ 前回の続きから再開</div>
+          <div class="resume-card-desc" id="resume-desc"></div>
+        </div>
+        <button class="resume-card-discard" onclick="event.stopPropagation(); discardSavedSession()">破棄</button>
+      </div>
+    </div>
+    <div class="mode-cards">
+      <div class="mode-card" onclick="startMode('flash')">
+<!--
+        <div class="mode-card-icon">🃏</div> 
+-->
+        <div class="mode-card-body">
+          <div class="mode-card-title">フラッシュカード</div>
+          <div class="mode-card-desc">カードをめくって意味を確認。自分で正解・不正解を判断します</div>
+        </div>
+      </div>
+      <div class="mode-card" onclick="startMode('quiz')">
+<!--
+        <div class="mode-card-icon">✏️</div>
+-->
+        <div class="mode-card-body">
+          <div class="mode-card-title">4択クイズ</div>
+          <div class="mode-card-desc">4つの選択肢から正解を選びます。</div>
+        </div>
+      </div>
+      <div class="mode-card" onclick="startMode('list')">
+<!--
+        <div class="mode-card-icon">📋</div>
+-->
+        <div class="mode-card-body">
+          <div class="mode-card-title">一覧</div>
+          <div class="mode-card-desc">単語と意味を一覧表示。検索や絞り込みができます</div>
+        </div>
+      </div>
+      <div class="mode-card" onclick="startMode('timer')">
+        <div class="mode-card-body">
+          <div class="mode-card-title">タイムアタック</div>
+          <div class="mode-card-desc">5秒以内に4択から正解を選びます。時間切れは不正解になります</div>
+        </div>
+      </div>
+      <div class="mode-card" onclick="startMode('spell')">
+        <div class="mode-card-body">
+          <div class="mode-card-title">綴り入力</div>
+          <div class="mode-card-desc">意味を見て英単語を入力します。最初の文字など少しヒントあり</div>
+        </div>
+      </div>
+      <div class="mode-card" id="wrong-mode-card" onclick="startMode('wrong')">
+        <div class="mode-card-body">
+          <div class="mode-card-title">⚠️ 苦手単語モード</div>
+          <div class="mode-card-desc" id="wrong-mode-desc">不正解した単語だけを集めて出題します</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- テスト画面 -->
+  <div class="page" id="page-test">
+    <div class="test-header">
+      <button onclick="showPage('page-select')">← 戻る</button>
+      <div class="test-title" id="test-title"></div>
+    </div>
+    <div class="stats" id="stats-wrap">
+      <div class="stat"><div class="stat-num" id="stat-total">0</div><div class="stat-label">総単語数</div></div>
+      <div class="stat"><div class="stat-num" id="stat-correct" style="color:var(--green)">0</div><div class="stat-label">正解</div></div>
+      <div class="stat"><div class="stat-num" id="stat-wrong" style="color:var(--red)">0</div><div class="stat-label">不正解</div></div>
+      <div class="stat"><div class="stat-num" id="stat-remain">0</div><div class="stat-label">残り</div></div>
+    </div>
+    <div class="filters">
+      <label>Unit:</label>
+      <select id="unit-filter"><option value="">すべて</option></select>
+      <span id="test-filters">
+        <label style="margin-left:6px;">方向:</label>
+        <select id="dir-filter">
+          <option value="en-ja">英 → 日</option>
+          <option value="ja-en">日 → 英</option>
+        </select>
+        <label style="margin-left:6px;">順序:</label>
+        <select id="order-filter">
+          <option value="seq">順番</option>
+          <option value="random">ランダム</option>
+        </select>
+      </span>
+    </div>
+    <div class="mode-tabs">
+      <button class="tab active" id="tab-flash" onclick="setMode('flash')">フラッシュカード</button>
+      <button class="tab" id="tab-quiz" onclick="setMode('quiz')">4択クイズ</button>
+      <button class="tab" id="tab-timer" onclick="setMode('timer')">タイムアタック</button>
+      <button class="tab" id="tab-spell" onclick="setMode('spell')">綴り入力</button>
+      <button class="tab" id="tab-wrong" onclick="setMode('wrong')">⚠️ 苦手</button>
+      <button class="tab" id="tab-list" onclick="setMode('list')">一覧</button>
+    </div>
+    <div class="progress-wrap" id="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+      <div class="progress-label" id="progress-label">0 / 0</div>
+    </div>
+
+    <!-- フラッシュカード -->
+    <div id="mode-flash">
+      <div class="card-wrap">
+        <div class="card" id="flash-card" onclick="flipCard()">
+          <div class="face">
+            <div class="word" id="flash-front">-</div>
+            <div class="unit-tag" id="flash-unit"></div>
+            <div class="hint">クリック / Space で答えを見る &nbsp;·&nbsp; ← 不正解 &nbsp; → 正解 &nbsp; ↓ スキップ</div>
+          </div>
+          <div class="face face-back">
+            <div class="meaning" id="flash-back">-</div>
+          </div>
+        </div>
+      </div>
+      <div class="controls">
+        <button class="btn-danger" onclick="markAnswer(false)">✗ 不正解</button>
+        <button onclick="skipCard()">→ スキップ</button>
+        <button class="btn-success" onclick="markAnswer(true)">✓ 正解</button>
+      </div>
+    </div>
+
+    <!-- 4択クイズ -->
+    <div id="mode-quiz" style="display:none;">
+      <div class="quiz-question-wrap">
+        <div class="quiz-unit" id="quiz-unit-tag"></div>
+        <div class="quiz-question" id="quiz-question">-</div>
+      </div>
+      <div class="quiz-options" id="quiz-options"></div>
+      <div class="quiz-feedback" id="quiz-feedback"></div>
+    </div>
+
+    <!-- タイムアタック -->
+    <div id="mode-timer" style="display:none;">
+      <div class="timer-ring-wrap">
+        <svg class="timer-svg" width="80" height="80" viewBox="0 0 80 80">
+          <circle class="timer-track" cx="40" cy="40" r="34"/>
+          <circle class="timer-bar" id="timer-bar" cx="40" cy="40" r="34"
+            stroke-dasharray="213.6" stroke-dashoffset="0" stroke="var(--green)"/>
+          <text class="timer-label" id="timer-label" x="40" y="40" transform="rotate(90,40,40)">5</text>
+        </svg>
+      </div>
+      <div class="timer-card-question" id="timer-question">-</div>
+      <div class="timer-card-unit" id="timer-unit-tag"></div>
+      <div class="timer-options" id="timer-options"></div>
+      <div class="timer-feedback" id="timer-feedback"></div>
+    </div>
+    <div id="timeout-overlay" class="timeout-overlay" style="display:none;">
+      <div class="timeout-box">
+        <div style="font-size:32px;margin-bottom:0.5rem;">⏰</div>
+        <div style="font-size:14px;color:var(--text2);margin-bottom:0.5rem;">時間切れ！</div>
+        <div class="timeout-word" id="timeout-word"></div>
+        <div class="timeout-answer" id="timeout-answer"></div>
+        <button onclick="dismissTimeout()">次へ →</button>
+      </div>
+    </div>
+
+    <!-- 綴り入力 -->
+    <div id="mode-spell" style="display:none;">
+      <div class="spell-question" id="spell-question">-</div>
+      <div class="spell-unit-tag" id="spell-unit-tag"></div>
+      <div class="spell-hint" id="spell-hint"></div>
+      <div class="spell-input-wrap">
+        <input class="spell-input" id="spell-input" type="text" autocomplete="off"
+          autocorrect="off" autocapitalize="off" spellcheck="false"
+          placeholder="英単語を入力..." oninput="onSpellInput()" onkeydown="onSpellKey(event)">
+        <button class="spell-hint-btn" onclick="revealMoreHint()">ヒント+</button>
+      </div>
+      <div class="spell-feedback" id="spell-feedback"></div>
+      <div class="controls" style="margin-bottom:0;">
+        <button id="spell-retry-btn" style="display:none;" onclick="retrySpell()">↩ もう一度</button>
+        <button onclick="skipSpell()">→ スキップ</button>
+      </div>
+    </div>
+
+    <!-- 一覧 -->
+    <div id="mode-list" style="display:none;">
+      <div class="list-filters">
+        <input class="list-search" type="text" id="list-search" placeholder="単語を検索..." oninput="renderList()">
+        <label style="margin-left:4px;">
+          <input type="checkbox" id="list-mastered-only" onchange="renderList()"> 未習得のみ
+        </label>
+      </div>
+      <div class="list-count" id="list-count"></div>
+      <table class="word-table">
+        <thead><tr><th>英単語</th><th>日本語の意味</th><th>Unit</th><th>不正解</th></tr></thead>
+        <tbody id="list-body"></tbody>
+      </table>
+    </div>
+
+    <div class="controls" style="margin-top:0.25rem;">
+      <button onclick="startSession()">↺ リセット</button>
+      <button onclick="saveAndQuit()" id="save-quit-btn">💾 中断して保存</button>
+    </div>
+  </div>
+
+</div>
+<script>
+/* ---- ストレージ ---- */
+function store() { try { return JSON.parse(localStorage.getItem('vq_store2') || '{}'); } catch(e) { return {}; } }
+function saveStore(s) { try { localStorage.setItem('vq_store2', JSON.stringify(s)); } catch(e) {} }
+function saveDeck(name, words) { const s = store(); s[name] = { words, saved: Date.now(), mastered: s[name]?.mastered || {}, wrongWords: s[name]?.wrongWords || {} }; saveStore(s); }
+function deleteDeck(name) { const s = store(); delete s[name]; saveStore(s); renderDecks(); }
+
+function getMastered(name) { const s = store(); return s[name]?.mastered || {}; }
+function saveMastered(name, mastered) { const s = store(); if (s[name]) { s[name].mastered = mastered; saveStore(s); } }
+function getWrongWords(name) { const s = store(); return s[name]?.wrongWords || {}; }
+function saveWrongWords(name, ww) { const s = store(); if (s[name]) { s[name].wrongWords = ww; saveStore(s); } }
+function getSavedSession(name) { const s = store(); return s[name]?.savedSession || null; }
+function saveSession(name, snap) { const s = store(); if (s[name]) { s[name].savedSession = snap; saveStore(s); } }
+function clearSavedSession(name) { const s = store(); if (s[name]) { delete s[name].savedSession; saveStore(s); } }
+
+function esc(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ---- ホーム ---- */
+function renderDecks() {
+  const s = store();
+  const keys = Object.keys(s);
+  const sec = document.getElementById('decks-section');
+  const grid = document.getElementById('deck-grid');
+  if (!keys.length) { sec.style.display = 'none'; return; }
+  sec.style.display = 'block';
+  grid.innerHTML = keys.map(k => {
+    const d = new Date(s[k].saved).toLocaleDateString('ja-JP');
+    const total = s[k].words.length;
+    const masteredCount = Object.keys(s[k].mastered || {}).length;
+    const pct = total ? Math.round(masteredCount / total * 100) : 0;
+    const barColor = pct === 100 ? '#639922' : pct >= 50 ? '#3B6D11' : 'var(--green)';
+    return `<div class="deck-card">
+      <div class="deck-name">${esc(k)}</div>
+      <div class="deck-meta">${total}単語 · ${d}</div>
+      <div class="deck-progress-wrap">
+        <div class="deck-progress-bar"><div class="deck-progress-fill" style="width:${pct}%; background:${barColor}"></div></div>
+        <div class="deck-progress-label"><span>習得済み ${masteredCount} / ${total}</span><span>${pct}%</span></div>
+      </div>
+      <div class="deck-actions">
+        <button onclick="openDeck('${esc(k)}')">▶ テスト</button>
+        <button onclick="if(confirm('「${esc(k)}」の進捗をリセットしますか？')){const s=store();if(s['${esc(k)}']){s['${esc(k)}'].mastered={};saveStore(s);renderDecks();}}" title="進捗リセット">↺</button>
+        <button class="btn-del" onclick="if(confirm('「${esc(k)}」を削除しますか？'))deleteDeck('${esc(k)}')">削除</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ---- ファイル読み込み ---- */
+document.getElementById('file-input').addEventListener('change', function(e) {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+  let loaded = 0;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      const wb = XLSX.read(ev.target.result, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws);
+      const words = rows
+        .filter(r => r['英単語'] && r['日本語の意味'])
+        .map(r => ({ unit: String(r['Unit'] || ''), en: String(r['英単語']).trim(), ja: String(r['日本語の意味']).trim() }));
+      if (!words.length) { alert(`「${file.name}」から単語データが見つかりませんでした。`); return; }
+      const name = file.name.replace(/\.xlsx$/i, '');
+      saveDeck(name, words);
+      loaded++;
+      if (loaded === files.length) renderDecks();
+    };
+    reader.readAsArrayBuffer(file);
+  });
+  e.target.value = '';
+});
+
+/* ---- テスト状態 ---- */
+let allWords = [], session = [], idx = 0, correct = 0, wrong = 0;
+let mode = 'flash', flipped = false, quizAnswered = false;
+let currentDeckName = '', mastered = {}, wrongWords = {};
+
+function openDeck(name) {
+  const s = store();
+  if (!s[name]) return;
+  allWords = s[name].words;
+  currentDeckName = name;
+  mastered = { ...getMastered(name) };
+  wrongWords = { ...getWrongWords(name) };
+
+  // モード選択画面の初期化
+  document.getElementById('select-deck-name').textContent = name;
+  const units = [...new Set(allWords.map(w => w.unit))].filter(Boolean).sort();
+  const selUnit = document.getElementById('select-unit-filter');
+  selUnit.innerHTML = '<option value="">すべて</option>' + units.map(u => `<option value="${esc(u)}">${esc(u)}</option>`).join('');
+
+  // 苦手単語モードカードの説明を更新
+  const wwCount = Object.keys(wrongWords).length;
+  const desc = document.getElementById('wrong-mode-desc');
+  const card = document.getElementById('wrong-mode-card');
+  if (wwCount > 0) {
+    desc.textContent = `現在 ${wwCount} 単語が苦手リストにあります`;
+    card.style.opacity = '1'; card.style.pointerEvents = '';
+  } else {
+    desc.textContent = '苦手単語がまだありません。他のモードで練習しましょう';
+    card.style.opacity = '0.45'; card.style.pointerEvents = 'none';
+  }
+  // 再開カードの表示
+  const snap = getSavedSession(name);
+  const resumeArea = document.getElementById('resume-area');
+  if (snap) {
+    const modeLabel = { flash:'フラッシュカード', quiz:'4択クイズ', timer:'タイムアタック', spell:'綴り入力', wrong:'苦手単語' }[snap.mode] || snap.mode;
+    const pct = snap.session.length ? Math.round(snap.idx / snap.session.length * 100) : 0;
+    document.getElementById('resume-desc').textContent =
+      `${modeLabel} · ${snap.idx} / ${snap.session.length}問 (${pct}%) · 正解 ${snap.correct} / 不正解 ${snap.wrong}`;
+    resumeArea.style.display = 'block';
+  } else {
+    resumeArea.style.display = 'none';
+  }
+  showPage('page-select');
+}
+
+function startMode(m) {
+  const unit = document.getElementById('select-unit-filter').value;
+  const dir  = document.getElementById('select-dir-filter').value;
+  const ord  = document.getElementById('select-order-filter').value;
+
+  document.getElementById('test-title').textContent = currentDeckName;
+  const units = [...new Set(allWords.map(w => w.unit))].filter(Boolean).sort();
+  const sel = document.getElementById('unit-filter');
+  sel.innerHTML = '<option value="">すべて</option>' + units.map(u => `<option value="${esc(u)}">${esc(u)}</option>`).join('');
+  sel.value = unit;
+  document.getElementById('dir-filter').value = dir;
+  document.getElementById('order-filter').value = ord;
+
+  document.getElementById('test-title').textContent = currentDeckName + (m === 'wrong' ? ' — 苦手単語' : '');
+  showPage('page-test');
+  setMode(m);
+}
+
+function goHome() { stopTimer(); showPage('page-home'); renderDecks(); }
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+/* ---- セッション ---- */
+function getFiltered() {
+  const unit = document.getElementById('unit-filter').value;
+  let words = unit ? allWords.filter(w => w.unit === unit) : [...allWords];
+  if (document.getElementById('order-filter').value === 'random') words.sort(() => Math.random() - 0.5);
+  return words;
+}
+
+function startSession() {
+  clearSavedSession(currentDeckName);
+  session = getFiltered(); idx = 0; correct = 0; wrong = 0;
+  updateStats(); showCard();
+}
+
+function saveAndQuit() {
+  if (mode === 'list') { showPage('page-select'); return; }
+  // 苦手モードはsessionがallWordsと独立しているのでそのまま保存
+  const snap = {
+    mode,
+    session: session.map(w => w.en), // 単語のenキーだけ保存してサイズを抑える
+    idx, correct, wrong,
+    unit: document.getElementById('unit-filter').value,
+    dir:  document.getElementById('dir-filter').value,
+    order: document.getElementById('order-filter').value,
+    savedAt: Date.now()
+  };
+  saveSession(currentDeckName, snap);
+  stopTimer();
+  showPage('page-select');
+  openDeck(currentDeckName); // 再開カードを更新して選択画面へ
+}
+
+function resumeSession() {
+  const snap = getSavedSession(currentDeckName);
+  if (!snap) return;
+
+  // session を単語オブジェクトに復元
+  const pool = snap.mode === 'wrong'
+    ? Object.keys(wrongWords).map(en => ({ en, ja: wrongWords[en].ja, unit: wrongWords[en].unit }))
+    : allWords;
+  const enSet = new Set(snap.session);
+  const orderedWords = snap.session
+    .map(en => pool.find(w => w.en === en))
+    .filter(Boolean);
+
+  // UIのフィルターを復元
+  const units = [...new Set(allWords.map(w => w.unit))].filter(Boolean).sort();
+  const sel = document.getElementById('unit-filter');
+  sel.innerHTML = '<option value="">すべて</option>' + units.map(u => `<option value="${esc(u)}">${esc(u)}</option>`).join('');
+  sel.value = snap.unit || '';
+  document.getElementById('dir-filter').value = snap.dir || 'en-ja';
+  document.getElementById('order-filter').value = snap.order || 'seq';
+
+  document.getElementById('test-title').textContent = currentDeckName + (snap.mode === 'wrong' ? ' — 苦手単語' : '');
+  showPage('page-test');
+
+  // 状態を直接復元
+  session = orderedWords;
+  idx = snap.idx;
+  correct = snap.correct;
+  wrong = snap.wrong;
+  mode = snap.mode;
+
+  // UI更新
+  ['flash','quiz','timer','spell','wrong','list'].forEach(id => {
+    document.getElementById('tab-'+id).classList.toggle('active', snap.mode === id);
+  });
+  document.getElementById('mode-flash').style.display = (snap.mode === 'flash' || snap.mode === 'wrong') ? 'block' : 'none';
+  ['quiz','timer','spell','list'].forEach(id => {
+    document.getElementById('mode-'+id).style.display = snap.mode === id ? 'block' : 'none';
+  });
+  const testOnly = snap.mode !== 'list';
+  document.getElementById('stats-wrap').style.display = testOnly ? 'grid' : 'none';
+  document.getElementById('progress-wrap').style.display = testOnly ? 'block' : 'none';
+  document.getElementById('test-filters').style.display = (testOnly && snap.mode !== 'wrong') ? '' : 'none';
+
+  updateStats();
+  if (snap.mode === 'spell') showSpellCard();
+  else if (snap.mode === 'timer') showTimerCard();
+  else if (snap.mode === 'wrong') showWrongCard();
+  else showCard();
+}
+
+function discardSavedSession() {
+  clearSavedSession(currentDeckName);
+  document.getElementById('resume-area').style.display = 'none';
+}
+
+document.getElementById('unit-filter').addEventListener('change', () => { if (mode === 'list') renderList(); else startSession(); });
+document.getElementById('dir-filter').addEventListener('change', () => showCard());
+document.getElementById('order-filter').addEventListener('change', startSession);
+
+function updateStats() {
+  document.getElementById('stat-total').textContent = session.length;
+  document.getElementById('stat-correct').textContent = correct;
+  document.getElementById('stat-wrong').textContent = wrong;
+  document.getElementById('stat-remain').textContent = Math.max(0, session.length - idx);
+  const pct = session.length ? Math.round(idx / session.length * 100) : 0;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = idx + ' / ' + session.length;
+}
+
+function cur() { return session[idx] || null; }
+function front(w) { return document.getElementById('dir-filter').value === 'en-ja' ? w.en : w.ja; }
+function back(w)  { return document.getElementById('dir-filter').value === 'en-ja' ? w.ja : w.en; }
+
+function showCard() {
+  const w = cur();
+  if (!w) {
+    if (mode === 'flash') {
+      document.getElementById('flash-front').textContent = '完了！';
+      document.getElementById('flash-back').textContent = '🎉';
+      document.getElementById('flash-unit').textContent = '';
+    } else {
+      document.getElementById('quiz-question').textContent = `完了！ 正解 ${correct} / ${session.length}`;
+      document.getElementById('quiz-options').innerHTML = '';
+      document.getElementById('quiz-feedback').textContent = '';
+    }
+    return;
+  }
+  if (mode === 'flash') showFlash(w); else showQuiz(w);
+  updateStats();
+}
+
+/* ---- フラッシュ ---- */
+function showFlash(w) {
+  const card = document.getElementById('flash-card');
+  const doSet = () => {
+    flipped = false;
+    card.classList.remove('flipped');
+    document.getElementById('flash-front').textContent = front(w);
+    document.getElementById('flash-back').textContent = back(w);
+    document.getElementById('flash-unit').textContent = w.unit;
+  };
+  if (flipped) {
+    // 一瞬テキストを空にしてからアニメーション→セット
+    document.getElementById('flash-front').textContent = '';
+    document.getElementById('flash-back').textContent = '';
+    card.classList.remove('flipped');
+    setTimeout(doSet, 460);
+  } else {
+    doSet();
+  }
+}
+function flipCard() { flipped = !flipped; document.getElementById('flash-card').classList.toggle('flipped', flipped); }
+function markAnswer(ok) {
+  const w = session[idx];
+  if (ok) {
+    correct++;
+    if (w) { mastered[w.en] = true; saveMastered(currentDeckName, mastered); }
+    // 苦手リストから削除（連続2回正解で解除）
+    if (w && wrongWords[w.en]) {
+      wrongWords[w.en].streak = (wrongWords[w.en].streak || 0) + 1;
+      if (wrongWords[w.en].streak >= 2) { delete wrongWords[w.en]; }
+      saveWrongWords(currentDeckName, wrongWords);
+    }
+  } else {
+    wrong++;
+    if (w) {
+      wrongWords[w.en] = { ja: w.ja, unit: w.unit, streak: 0, count: (wrongWords[w.en]?.count || 0) + 1 };
+      saveWrongWords(currentDeckName, wrongWords);
+    }
+  }
+  idx++;
+  if (mode === 'wrong') showWrongCard(); else showCard();
+}
+function skipCard() { idx++; if (mode === 'wrong') showWrongCard(); else showCard(); }
+
+/* ---- クイズ ---- */
+function showQuiz(w) {
+  quizAnswered = false;
+  document.getElementById('quiz-question').textContent = front(w);
+  document.getElementById('quiz-unit-tag').textContent = w.unit;
+  document.getElementById('quiz-feedback').textContent = '';
+  const ans = back(w);
+  const pool = allWords.filter(x => back(x) !== ans).sort(() => Math.random() - 0.5).slice(0, 3).map(x => back(x));
+  const opts = [...pool, ans].sort(() => Math.random() - 0.5);
+  document.getElementById('quiz-options').innerHTML = opts.map((o, i) =>
+    `<button class="option" data-val="${esc(o)}" onclick="answerQuiz(this)"><span style="font-size:11px;color:var(--text3);margin-right:4px;">${i+1}</span>${esc(o)}</button>`
+  ).join('');
+  document.getElementById('quiz-options').dataset.answer = ans;
+}
+
+function answerQuiz(btn) {
+  if (quizAnswered) return;
+  quizAnswered = true;
+  const ans = document.getElementById('quiz-options').dataset.answer;
+  const chosen = btn.dataset.val;
+  const currentW = session[idx];
+  document.querySelectorAll('.option').forEach(b => { if (b.dataset.val === ans) b.classList.add('correct'); });
+  const fb = document.getElementById('quiz-feedback');
+  if (chosen === ans) {
+    correct++;
+    if (currentW) { mastered[currentW.en] = true; saveMastered(currentDeckName, mastered); }
+    if (currentW && wrongWords[currentW.en]) {
+      wrongWords[currentW.en].streak = (wrongWords[currentW.en].streak || 0) + 1;
+      if (wrongWords[currentW.en].streak >= 2) { delete wrongWords[currentW.en]; }
+      saveWrongWords(currentDeckName, wrongWords);
+    }
+    fb.textContent = '✓ 正解！'; fb.style.color = 'var(--green)';
+  }
+  else {
+    btn.classList.add('wrong'); wrong++;
+    if (currentW) {
+      wrongWords[currentW.en] = { ja: currentW.ja, unit: currentW.unit, streak: 0, count: (wrongWords[currentW.en]?.count || 0) + 1 };
+      saveWrongWords(currentDeckName, wrongWords);
+    }
+    fb.textContent = '✗ 不正解'; fb.style.color = 'var(--red)';
+  }
+  idx++; updateStats();
+  setTimeout(showCard, 1200);
+}
+
+/* ---- モード ---- */
+function setMode(m) {
+  stopTimer();
+  document.getElementById('timeout-overlay').style.display = 'none';
+  mode = m;
+  ['flash','quiz','timer','spell','wrong','list'].forEach(id => {
+    document.getElementById('tab-'+id).classList.toggle('active', m === id);
+  });
+  // wrong モードはフラッシュカードのUIを流用
+  document.getElementById('mode-flash').style.display = (m === 'flash' || m === 'wrong') ? 'block' : 'none';
+  ['quiz','timer','spell','list'].forEach(id => {
+    document.getElementById('mode-'+id).style.display = m === id ? 'block' : 'none';
+  });
+  const testOnly = m !== 'list';
+  document.getElementById('stats-wrap').style.display = testOnly ? 'grid' : 'none';
+  document.getElementById('progress-wrap').style.display = testOnly ? 'block' : 'none';
+  document.getElementById('test-filters').style.display = (testOnly && m !== 'wrong') ? '' : 'none';
+  if (m === 'list') renderList();
+  else if (m === 'spell') startSpellSession();
+  else if (m === 'timer') startTimerSession();
+  else if (m === 'wrong') startWrongSession();
+  else startSession();
+}
+
+/* ---- 苦手単語モード ---- */
+function startWrongSession() {
+  clearSavedSession(currentDeckName);
+  const wwKeys = Object.keys(wrongWords);
+  if (!wwKeys.length) {
+    document.getElementById('flash-front').textContent = '苦手単語がありません 🎉';
+    document.getElementById('flash-back').textContent = '他のモードで練習しましょう';
+    document.getElementById('flash-unit').textContent = '';
+    document.getElementById('flash-card').classList.remove('flipped');
+    session = []; idx = 0; correct = 0; wrong = 0;
+    updateStats(); return;
+  }
+  // 不正解回数が多い順にソート、最大50件
+  session = wwKeys
+    .sort((a, b) => (wrongWords[b].count || 1) - (wrongWords[a].count || 1))
+    .slice(0, 50)
+    .map(en => ({ en, ja: wrongWords[en].ja, unit: wrongWords[en].unit }));
+  idx = 0; correct = 0; wrong = 0;
+  updateStats(); showWrongCard();
+}
+
+function showWrongCard() {
+  const w = cur();
+  const card = document.getElementById('flash-card');
+  const doSet = () => {
+    flipped = false;
+    card.classList.remove('flipped');
+    if (!w) {
+      document.getElementById('flash-front').textContent = '完了！ 苦手単語を克服中';
+      document.getElementById('flash-back').textContent = `正解 ${correct} / ${session.length}`;
+      document.getElementById('flash-unit').textContent = '';
+    } else {
+      document.getElementById('flash-front').textContent = w.en;
+      document.getElementById('flash-back').textContent = w.ja;
+      document.getElementById('flash-unit').textContent = w.unit + ' · 不正解 ' + (wrongWords[w.en]?.count || 1) + '回';
+    }
+    updateStats();
+  };
+  if (flipped) {
+    document.getElementById('flash-front').textContent = '';
+    document.getElementById('flash-back').textContent = '';
+    card.classList.remove('flipped');
+    setTimeout(doSet, 460);
+  } else {
+    doSet();
+  }
+}
+
+function renderList() {
+  const unit = document.getElementById('unit-filter').value;
+  const q = document.getElementById('list-search').value.trim().toLowerCase();
+  const masteredOnly = document.getElementById('list-mastered-only').checked;
+  let words = unit ? allWords.filter(w => w.unit === unit) : [...allWords];
+  if (q) words = words.filter(w => w.en.toLowerCase().includes(q) || w.ja.includes(q));
+  if (masteredOnly) words = words.filter(w => !mastered[w.en]);
+  document.getElementById('list-count').textContent = `${words.length}件`;
+  document.getElementById('list-body').innerHTML = words.map(w => {
+    const dot = mastered[w.en] ? '<span class="mastered-dot" title="習得済み"></span>' : '';
+    const wc = wrongWords[w.en]?.count || 0;
+    const wcStr = wc > 0 ? `<span style="color:var(--red);font-size:12px;">✗ ${wc}</span>` : '<span style="color:var(--text3);font-size:12px;">—</span>';
+    return `<tr>
+      <td class="word-en">${dot}${esc(w.en)}</td>
+      <td class="word-ja">${esc(w.ja)}</td>
+      <td class="word-unit-col">${esc(w.unit)}</td>
+      <td style="text-align:center;">${wcStr}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ---- タイムアタック ---- */
+const TIMER_SEC = 5;
+const CIRCUMFERENCE = 213.6;
+let timerInterval = null, timerRemain = TIMER_SEC, timerAnswered = false;
+
+function stopTimer() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+}
+
+function startTimerSession() {
+  stopTimer();
+  clearSavedSession(currentDeckName);
+  session = getFiltered(); idx = 0; correct = 0; wrong = 0;
+  updateStats(); showTimerCard();
+}
+
+function showTimerCard() {
+  stopTimer();
+  const w = cur();
+  if (!w) {
+    document.getElementById('timer-question').textContent = `完了！ 正解 ${correct} / ${session.length}`;
+    document.getElementById('timer-options').innerHTML = '';
+    document.getElementById('timer-feedback').textContent = '';
+    document.getElementById('timer-bar').style.strokeDashoffset = '0';
+    document.getElementById('timer-label').textContent = '';
+    return;
+  }
+  timerAnswered = false;
+  document.getElementById('timer-question').textContent = front(w);
+  document.getElementById('timer-unit-tag').textContent = w.unit;
+  document.getElementById('timer-feedback').textContent = '';
+
+  const ans = back(w);
+  const pool = allWords.filter(x => back(x) !== ans).sort(() => Math.random() - 0.5).slice(0, 3).map(x => back(x));
+  const opts = [...pool, ans].sort(() => Math.random() - 0.5);
+  document.getElementById('timer-options').innerHTML = opts.map((o, i) =>
+    `<button class="option" data-val="${esc(o)}" onclick="answerTimer(this)"><span style="font-size:11px;color:var(--text3);margin-right:4px;">${i+1}</span>${esc(o)}</button>`
+  ).join('');
+  document.getElementById('timer-options').dataset.answer = ans;
+
+  timerRemain = TIMER_SEC;
+  updateTimerRing(TIMER_SEC);
+  timerInterval = setInterval(() => {
+    timerRemain -= 0.1;
+    updateTimerRing(timerRemain);
+    if (timerRemain <= 0) { stopTimer(); if (!timerAnswered) timeoutTimer(w, ans); }
+  }, 100);
+}
+
+function updateTimerRing(t) {
+  const ratio = Math.max(0, t / TIMER_SEC);
+  const bar = document.getElementById('timer-bar');
+  bar.style.strokeDashoffset = CIRCUMFERENCE * (1 - ratio);
+  bar.style.stroke = ratio > 0.5 ? 'var(--green)' : ratio > 0.25 ? '#e6a817' : 'var(--red)';
+  document.getElementById('timer-label').textContent = Math.ceil(Math.max(0, t));
+}
+
+function answerTimer(btn) {
+  if (timerAnswered) return;
+  timerAnswered = true; stopTimer();
+  const ans = document.getElementById('timer-options').dataset.answer;
+  const chosen = btn.dataset.val;
+  const currentW = session[idx];
+  document.querySelectorAll('#timer-options .option').forEach(b => { if (b.dataset.val === ans) b.classList.add('correct'); });
+  const fb = document.getElementById('timer-feedback');
+  if (chosen === ans) {
+    correct++;
+    if (currentW) { mastered[currentW.en] = true; saveMastered(currentDeckName, mastered); }
+    if (currentW && wrongWords[currentW.en]) {
+      wrongWords[currentW.en].streak = (wrongWords[currentW.en].streak || 0) + 1;
+      if (wrongWords[currentW.en].streak >= 2) { delete wrongWords[currentW.en]; }
+      saveWrongWords(currentDeckName, wrongWords);
+    }
+    fb.textContent = '✓ 正解！'; fb.style.color = 'var(--green)';
+  } else {
+    btn.classList.add('wrong'); wrong++;
+    if (currentW) {
+      wrongWords[currentW.en] = { ja: currentW.ja, unit: currentW.unit, streak: 0, count: (wrongWords[currentW.en]?.count || 0) + 1 };
+      saveWrongWords(currentDeckName, wrongWords);
+    }
+    fb.textContent = '✗ 不正解'; fb.style.color = 'var(--red)';
+  }
+  idx++; updateStats();
+  setTimeout(showTimerCard, 1000);
+}
+
+function timeoutTimer(w, ans) {
+  if (mode !== 'timer') return;  // タイマーモード以外では発火しない
+  wrong++;
+  wrongWords[w.en] = { ja: w.ja, unit: w.unit, streak: 0, count: (wrongWords[w.en]?.count || 0) + 1 };
+  saveWrongWords(currentDeckName, wrongWords);
+  idx++; updateStats();
+  document.getElementById('timeout-word').textContent = front(w);
+  document.getElementById('timeout-answer').textContent = '正解: ' + ans;
+  document.getElementById('timeout-overlay').style.display = 'flex';
+}
+
+function dismissTimeout() {
+  document.getElementById('timeout-overlay').style.display = 'none';
+  showTimerCard();
+}
+
+/* ---- 綴り入力 ---- */
+let spellHintLevel = 0, spellWord = '', spellAnswered = false, spellIsRetry = false;
+
+function startSpellSession() {
+  clearSavedSession(currentDeckName);
+  session = getFiltered(); idx = 0; correct = 0; wrong = 0;
+  updateStats(); showSpellCard();
+}
+
+function buildHint(word, level) {
+  const len = word.length;
+  if (level === 0) return word[0] + ' ' + '_ '.repeat(len - 1).trim();
+  if (level === 1) {
+    const shown = Math.ceil(len / 3);
+    return word.slice(0, shown).split('').join(' ') + ' ' + '_ '.repeat(len - shown).trim();
+  }
+  if (level === 2) {
+    const mid = len > 2 ? '_ '.repeat(len - 2).trim() + ' ' : '';
+    return word[0] + ' ' + mid + (len > 1 ? word[len - 1] : '');
+  }
+  return word.split('').join(' ');
+}
+
+function showSpellCard() {
+  spellAnswered = false; spellHintLevel = 0; spellIsRetry = false;
+  document.getElementById('spell-retry-btn').style.display = 'none';
+  const w = cur();
+  if (!w) {
+    document.getElementById('spell-question').textContent = `完了！ 正解 ${correct} / ${session.length}`;
+    document.getElementById('spell-hint').textContent = '';
+    document.getElementById('spell-input').value = '';
+    document.getElementById('spell-feedback').textContent = '';
+    return;
+  }
+  spellWord = w.en;
+  document.getElementById('spell-question').textContent = w.ja;
+  document.getElementById('spell-unit-tag').textContent = w.unit;
+  document.getElementById('spell-hint').textContent = buildHint(spellWord, 0);
+  const inp = document.getElementById('spell-input');
+  inp.value = ''; inp.className = 'spell-input';
+  document.getElementById('spell-feedback').textContent = '';
+  updateStats();
+  setTimeout(() => inp.focus(), 50);
+}
+
+function revealMoreHint() {
+  if (spellAnswered) return;
+  spellHintLevel = Math.min(spellHintLevel + 1, 3);
+  document.getElementById('spell-hint').textContent = buildHint(spellWord, spellHintLevel);
+}
+
+function onSpellInput() {
+  if (spellAnswered) return;
+  const inp = document.getElementById('spell-input');
+  if (inp.value.toLowerCase().trim() === spellWord.toLowerCase()) {
+    spellAnswered = true;
+    inp.className = 'spell-input correct-anim';
+    if (!spellIsRetry) {
+      // 初回正解のみ correct に加算・習得済みにする
+      correct++;
+      const w = session[idx];
+      if (w) { mastered[w.en] = true; saveMastered(currentDeckName, mastered); }
+    }
+    spellIsRetry = false;
+    document.getElementById('spell-retry-btn').style.display = 'none';
+    const fb = document.getElementById('spell-feedback');
+    fb.textContent = '✓ 正解！';
+    fb.style.color = 'var(--green)';
+    document.getElementById('spell-hint').textContent = spellWord;
+    idx++; updateStats();
+    setTimeout(showSpellCard, 900);
+  }
+}
+
+function onSpellKey(e) {
+  if (e.key !== 'Enter' || spellAnswered) return;
+  const typed = document.getElementById('spell-input').value.toLowerCase().trim();
+  if (!typed) return;
+  if (typed === spellWord.toLowerCase()) { onSpellInput(); return; }
+  // 不正解確定
+  spellAnswered = true;
+  const inp = document.getElementById('spell-input');
+  inp.className = 'spell-input wrong-anim';
+  wrong++;
+  const w = session[idx];
+  if (w) {
+    wrongWords[w.en] = { ja: w.ja, unit: w.unit, streak: 0, count: (wrongWords[w.en]?.count || 0) + 1 };
+    saveWrongWords(currentDeckName, wrongWords);
+  }
+  const fb = document.getElementById('spell-feedback');
+  fb.textContent = `✗ 正解: ${spellWord}`;
+  fb.style.color = 'var(--red)';
+  document.getElementById('spell-hint').textContent = spellWord;
+  // idx は進めず、もう一度ボタンを表示
+  idx++; updateStats();
+  document.getElementById('spell-retry-btn').style.display = '';
+}
+
+function retrySpell() {
+  // 同じ単語をもう一度（idx を戻して再表示、ただし wrong カウントは加算しない）
+  idx--;
+  spellAnswered = false;
+  spellHintLevel = 0;
+  const w = cur();
+  if (!w) { idx++; showSpellCard(); return; }
+  spellWord = w.en;
+  document.getElementById('spell-question').textContent = w.ja;
+  document.getElementById('spell-unit-tag').textContent = w.unit;
+  document.getElementById('spell-hint').textContent = buildHint(spellWord, 0);
+  const inp = document.getElementById('spell-input');
+  inp.value = ''; inp.className = 'spell-input';
+  document.getElementById('spell-feedback').textContent = '';
+  document.getElementById('spell-retry-btn').style.display = 'none';
+  // 再挑戦で正解しても correct には加算しないフラグ
+  spellIsRetry = true;
+  updateStats();
+  setTimeout(() => inp.focus(), 50);
+}
+
+function skipSpell() {
+  stopTimer();
+  if (!spellAnswered) { wrong++; idx++; updateStats(); }
+  showSpellCard();
+}
+
+renderDecks();
+
+/* ---- キーボードショートカット ---- */
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+  if (!document.getElementById('page-test').classList.contains('active')) return;
+
+  // タイムアウトオーバーレイ中
+  if (document.getElementById('timeout-overlay').style.display !== 'none') {
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); dismissTimeout(); }
+    return;
+  }
+
+  if (mode === 'flash' || mode === 'wrong') {
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); flipCard(); }
+    if (e.key === 'ArrowRight' || e.key === 'o') markAnswer(true);
+    if (e.key === 'ArrowLeft'  || e.key === 'x') markAnswer(false);
+    if (e.key === 'ArrowDown'  || e.key === 's') skipCard();
+  }
+  if (mode === 'quiz' || mode === 'timer') {
+    const sel = mode === 'quiz' ? '#quiz-options .option' : '#timer-options .option';
+    const opts = document.querySelectorAll(sel);
+    if (e.key === '1' && opts[0]) opts[0].click();
+    if (e.key === '2' && opts[1]) opts[1].click();
+    if (e.key === '3' && opts[2]) opts[2].click();
+    if (e.key === '4' && opts[3]) opts[3].click();
+  }
+  if (mode === 'spell') {
+    if (e.key === 'h' && document.activeElement !== document.getElementById('spell-input')) revealMoreHint();
+  }
+});
+</script>
+</body>
+</html>
