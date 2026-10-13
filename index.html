@@ -271,7 +271,7 @@ select { font-size: 13px; padding: 5px 10px; border-radius: var(--radius); borde
   <!-- テスト画面 -->
   <div class="page" id="page-test">
     <div class="test-header">
-      <button onclick="showPage('page-select')">← 戻る</button>
+      <button onclick="backToSelect()">← 戻る</button>
       <div class="test-title" id="test-title"></div>
     </div>
     <div class="stats" id="stats-wrap">
@@ -399,7 +399,7 @@ select { font-size: 13px; padding: 5px 10px; border-radius: var(--radius); borde
     </div>
 
     <div class="controls" style="margin-top:0.25rem;">
-      <button onclick="startSession()">↺ リセット</button>
+      <button onclick="setMode(mode)">↺ リセット</button>
       <button onclick="saveAndQuit()" id="save-quit-btn">💾 中断して保存</button>
     </div>
   </div>
@@ -436,7 +436,7 @@ function renderDecks() {
     const masteredCount = Object.keys(s[k].mastered || {}).length;
     const pct = total ? Math.round(masteredCount / total * 100) : 0;
     const barColor = pct === 100 ? '#639922' : pct >= 50 ? '#3B6D11' : 'var(--green)';
-    return `<div class="deck-card">
+    return `<div class="deck-card" data-name="${esc(k)}">
       <div class="deck-name">${esc(k)}</div>
       <div class="deck-meta">${total}単語 · ${d}</div>
       <div class="deck-progress-wrap">
@@ -444,12 +444,23 @@ function renderDecks() {
         <div class="deck-progress-label"><span>習得済み ${masteredCount} / ${total}</span><span>${pct}%</span></div>
       </div>
       <div class="deck-actions">
-        <button onclick="openDeck('${esc(k)}')">▶ テスト</button>
-        <button onclick="if(confirm('「${esc(k)}」の進捗をリセットしますか？')){const s=store();if(s['${esc(k)}']){s['${esc(k)}'].mastered={};saveStore(s);renderDecks();}}" title="進捗リセット">↺</button>
-        <button class="btn-del" onclick="if(confirm('「${esc(k)}」を削除しますか？'))deleteDeck('${esc(k)}')">削除</button>
+        <button onclick="openDeck(deckNameOf(this))">▶ テスト</button>
+        <button onclick="resetProgress(deckNameOf(this))" title="進捗リセット">↺</button>
+        <button class="btn-del" onclick="confirmDeleteDeck(deckNameOf(this))">削除</button>
       </div>
     </div>`;
   }).join('');
+}
+
+// デッキ名はJSの文字列に埋め込まず data-name 経由で受け取る（' などを含む名前対策）
+function deckNameOf(el) { return el.closest('.deck-card').dataset.name; }
+function resetProgress(name) {
+  if (!confirm(`「${name}」の進捗をリセットしますか？`)) return;
+  const s = store();
+  if (s[name]) { s[name].mastered = {}; saveStore(s); renderDecks(); }
+}
+function confirmDeleteDeck(name) {
+  if (confirm(`「${name}」を削除しますか？`)) deleteDeck(name);
 }
 
 /* ---- ファイル読み込み ---- */
@@ -541,6 +552,11 @@ function startMode(m) {
 }
 
 function goHome() { stopTimer(); showPage('page-home'); renderDecks(); }
+function backToSelect() {
+  stopTimer();
+  document.getElementById('timeout-overlay').style.display = 'none';
+  openDeck(currentDeckName); // 苦手単語数・再開カードを更新して選択画面へ
+}
 
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -563,6 +579,8 @@ function startSession() {
 
 function saveAndQuit() {
   if (mode === 'list') { showPage('page-select'); return; }
+  // 最後まで終わっているセッションは保存しない
+  if (idx >= session.length) { clearSavedSession(currentDeckName); backToSelect(); return; }
   // 苦手モードはsessionがallWordsと独立しているのでそのまま保存
   const snap = {
     mode,
@@ -635,9 +653,14 @@ function discardSavedSession() {
   document.getElementById('resume-area').style.display = 'none';
 }
 
-document.getElementById('unit-filter').addEventListener('change', () => { if (mode === 'list') renderList(); else startSession(); });
-document.getElementById('dir-filter').addEventListener('change', () => showCard());
-document.getElementById('order-filter').addEventListener('change', startSession);
+// フィルター変更時は現在のモードでセッションをやり直す
+document.getElementById('unit-filter').addEventListener('change', () => setMode(mode));
+document.getElementById('order-filter').addEventListener('change', () => setMode(mode));
+// 方向の変更は進捗を保ったまま、表示中の問題だけ描き直す
+document.getElementById('dir-filter').addEventListener('change', () => {
+  if (mode === 'timer') showTimerCard();
+  else if (mode === 'flash' || mode === 'quiz') showCard();
+});
 
 function updateStats() {
   document.getElementById('stat-total').textContent = session.length;
@@ -694,6 +717,7 @@ function showFlash(w) {
 function flipCard() { flipped = !flipped; document.getElementById('flash-card').classList.toggle('flipped', flipped); }
 function markAnswer(ok) {
   const w = session[idx];
+  if (!w) return; // 完了後は何もしない
   if (ok) {
     correct++;
     if (w) { mastered[w.en] = true; saveMastered(currentDeckName, mastered); }
@@ -713,7 +737,7 @@ function markAnswer(ok) {
   idx++;
   if (mode === 'wrong') showWrongCard(); else showCard();
 }
-function skipCard() { idx++; if (mode === 'wrong') showWrongCard(); else showCard(); }
+function skipCard() { if (!cur()) return; idx++; if (mode === 'wrong') showWrongCard(); else showCard(); }
 
 /* ---- クイズ ---- */
 function showQuiz(w) {
@@ -1076,7 +1100,10 @@ function retrySpell() {
 
 function skipSpell() {
   stopTimer();
-  if (!spellAnswered) { wrong++; idx++; updateStats(); }
+  if (!spellAnswered) {
+    if (!cur()) return; // 完了後は何もしない
+    wrong++; idx++; updateStats();
+  }
   showSpellCard();
 }
 
