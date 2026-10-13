@@ -467,22 +467,29 @@ function confirmDeleteDeck(name) {
 document.getElementById('file-input').addEventListener('change', function(e) {
   const files = Array.from(e.target.files);
   if (!files.length) return;
-  let loaded = 0;
+  // 失敗したファイルも数えて、全ファイル処理後に必ず一覧を更新する
+  let done = 0;
+  const finish = () => { if (++done === files.length) renderDecks(); };
   files.forEach(file => {
     const reader = new FileReader();
     reader.onload = function(ev) {
-      const wb = XLSX.read(ev.target.result, { type: 'array' });
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(ws);
-      const words = rows
-        .filter(r => r['英単語'] && r['日本語の意味'])
-        .map(r => ({ unit: String(r['Unit'] || ''), en: String(r['英単語']).trim(), ja: String(r['日本語の意味']).trim() }));
-      if (!words.length) { alert(`「${file.name}」から単語データが見つかりませんでした。`); return; }
-      const name = file.name.replace(/\.xlsx$/i, '');
-      saveDeck(name, words);
-      loaded++;
-      if (loaded === files.length) renderDecks();
+      try {
+        const wb = XLSX.read(ev.target.result, { type: 'array' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(ws);
+        const words = rows
+          .filter(r => r['英単語'] && r['日本語の意味'])
+          .map(r => ({ unit: String(r['Unit'] || ''), en: String(r['英単語']).trim(), ja: String(r['日本語の意味']).trim() }));
+        if (!words.length) { alert(`「${file.name}」から単語データが見つかりませんでした。`); return; }
+        const name = file.name.replace(/\.xlsx$/i, '');
+        saveDeck(name, words);
+      } catch (err) {
+        alert(`「${file.name}」を読み込めませんでした。XLSXファイルか確認してください。`);
+      } finally {
+        finish();
+      }
     };
+    reader.onerror = () => { alert(`「${file.name}」を読み込めませんでした。`); finish(); };
     reader.readAsArrayBuffer(file);
   });
   e.target.value = '';
@@ -659,7 +666,7 @@ document.getElementById('order-filter').addEventListener('change', () => setMode
 // 方向の変更は進捗を保ったまま、表示中の問題だけ描き直す
 document.getElementById('dir-filter').addEventListener('change', () => {
   if (mode === 'timer') showTimerCard();
-  else if (mode === 'flash' || mode === 'quiz') showCard();
+  else if (mode === 'flash' || mode === 'quiz') { stopTimer(); showCard(); }
 });
 
 function updateStats() {
@@ -694,6 +701,23 @@ function showCard() {
   updateStats();
 }
 
+/* ---- 正解・不正解の記録（全モード共通） ---- */
+function recordCorrect(w) {
+  if (!w) return;
+  mastered[w.en] = true; saveMastered(currentDeckName, mastered);
+  // 苦手リストから削除（連続2回正解で解除）
+  if (wrongWords[w.en]) {
+    wrongWords[w.en].streak = (wrongWords[w.en].streak || 0) + 1;
+    if (wrongWords[w.en].streak >= 2) { delete wrongWords[w.en]; }
+    saveWrongWords(currentDeckName, wrongWords);
+  }
+}
+function recordWrong(w) {
+  if (!w) return;
+  wrongWords[w.en] = { ja: w.ja, unit: w.unit, streak: 0, count: (wrongWords[w.en]?.count || 0) + 1 };
+  saveWrongWords(currentDeckName, wrongWords);
+}
+
 /* ---- フラッシュ ---- */
 function showFlash(w) {
   const card = document.getElementById('flash-card');
@@ -718,22 +742,8 @@ function flipCard() { flipped = !flipped; document.getElementById('flash-card').
 function markAnswer(ok) {
   const w = session[idx];
   if (!w) return; // 完了後は何もしない
-  if (ok) {
-    correct++;
-    if (w) { mastered[w.en] = true; saveMastered(currentDeckName, mastered); }
-    // 苦手リストから削除（連続2回正解で解除）
-    if (w && wrongWords[w.en]) {
-      wrongWords[w.en].streak = (wrongWords[w.en].streak || 0) + 1;
-      if (wrongWords[w.en].streak >= 2) { delete wrongWords[w.en]; }
-      saveWrongWords(currentDeckName, wrongWords);
-    }
-  } else {
-    wrong++;
-    if (w) {
-      wrongWords[w.en] = { ja: w.ja, unit: w.unit, streak: 0, count: (wrongWords[w.en]?.count || 0) + 1 };
-      saveWrongWords(currentDeckName, wrongWords);
-    }
-  }
+  if (ok) { correct++; recordCorrect(w); }
+  else    { wrong++;   recordWrong(w); }
   idx++;
   if (mode === 'wrong') showWrongCard(); else showCard();
 }
@@ -763,25 +773,15 @@ function answerQuiz(btn) {
   document.querySelectorAll('.option').forEach(b => { if (b.dataset.val === ans) b.classList.add('correct'); });
   const fb = document.getElementById('quiz-feedback');
   if (chosen === ans) {
-    correct++;
-    if (currentW) { mastered[currentW.en] = true; saveMastered(currentDeckName, mastered); }
-    if (currentW && wrongWords[currentW.en]) {
-      wrongWords[currentW.en].streak = (wrongWords[currentW.en].streak || 0) + 1;
-      if (wrongWords[currentW.en].streak >= 2) { delete wrongWords[currentW.en]; }
-      saveWrongWords(currentDeckName, wrongWords);
-    }
+    correct++; recordCorrect(currentW);
     fb.textContent = '✓ 正解！'; fb.style.color = 'var(--green)';
   }
   else {
-    btn.classList.add('wrong'); wrong++;
-    if (currentW) {
-      wrongWords[currentW.en] = { ja: currentW.ja, unit: currentW.unit, streak: 0, count: (wrongWords[currentW.en]?.count || 0) + 1 };
-      saveWrongWords(currentDeckName, wrongWords);
-    }
+    btn.classList.add('wrong'); wrong++; recordWrong(currentW);
     fb.textContent = '✗ 不正解'; fb.style.color = 'var(--red)';
   }
   idx++; updateStats();
-  setTimeout(showCard, 1200);
+  scheduleNext(showCard, 1200);
 }
 
 /* ---- モード ---- */
@@ -882,8 +882,16 @@ const TIMER_SEC = 5;
 const CIRCUMFERENCE = 213.6;
 let timerInterval = null, timerRemain = TIMER_SEC, timerAnswered = false;
 
+// 回答後の「次の問題へ」は1つだけ予約し、モード切替・戻る時に取り消す
+let pendingNext = null;
+function scheduleNext(fn, ms) {
+  clearTimeout(pendingNext);
+  pendingNext = setTimeout(() => { pendingNext = null; fn(); }, ms);
+}
+
 function stopTimer() {
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  if (pendingNext) { clearTimeout(pendingNext); pendingNext = null; }
 }
 
 function startTimerSession() {
@@ -943,31 +951,19 @@ function answerTimer(btn) {
   document.querySelectorAll('#timer-options .option').forEach(b => { if (b.dataset.val === ans) b.classList.add('correct'); });
   const fb = document.getElementById('timer-feedback');
   if (chosen === ans) {
-    correct++;
-    if (currentW) { mastered[currentW.en] = true; saveMastered(currentDeckName, mastered); }
-    if (currentW && wrongWords[currentW.en]) {
-      wrongWords[currentW.en].streak = (wrongWords[currentW.en].streak || 0) + 1;
-      if (wrongWords[currentW.en].streak >= 2) { delete wrongWords[currentW.en]; }
-      saveWrongWords(currentDeckName, wrongWords);
-    }
+    correct++; recordCorrect(currentW);
     fb.textContent = '✓ 正解！'; fb.style.color = 'var(--green)';
   } else {
-    btn.classList.add('wrong'); wrong++;
-    if (currentW) {
-      wrongWords[currentW.en] = { ja: currentW.ja, unit: currentW.unit, streak: 0, count: (wrongWords[currentW.en]?.count || 0) + 1 };
-      saveWrongWords(currentDeckName, wrongWords);
-    }
+    btn.classList.add('wrong'); wrong++; recordWrong(currentW);
     fb.textContent = '✗ 不正解'; fb.style.color = 'var(--red)';
   }
   idx++; updateStats();
-  setTimeout(showTimerCard, 1000);
+  scheduleNext(showTimerCard, 1000);
 }
 
 function timeoutTimer(w, ans) {
   if (mode !== 'timer') return;  // タイマーモード以外では発火しない
-  wrong++;
-  wrongWords[w.en] = { ja: w.ja, unit: w.unit, streak: 0, count: (wrongWords[w.en]?.count || 0) + 1 };
-  saveWrongWords(currentDeckName, wrongWords);
+  wrong++; recordWrong(w);
   idx++; updateStats();
   document.getElementById('timeout-word').textContent = front(w);
   document.getElementById('timeout-answer').textContent = '正解: ' + ans;
@@ -1038,9 +1034,7 @@ function onSpellInput() {
     inp.className = 'spell-input correct-anim';
     if (!spellIsRetry) {
       // 初回正解のみ correct に加算・習得済みにする
-      correct++;
-      const w = session[idx];
-      if (w) { mastered[w.en] = true; saveMastered(currentDeckName, mastered); }
+      correct++; recordCorrect(session[idx]);
     }
     spellIsRetry = false;
     document.getElementById('spell-retry-btn').style.display = 'none';
@@ -1049,7 +1043,7 @@ function onSpellInput() {
     fb.style.color = 'var(--green)';
     document.getElementById('spell-hint').textContent = spellWord;
     idx++; updateStats();
-    setTimeout(showSpellCard, 900);
+    scheduleNext(showSpellCard, 900);
   }
 }
 
@@ -1062,12 +1056,7 @@ function onSpellKey(e) {
   spellAnswered = true;
   const inp = document.getElementById('spell-input');
   inp.className = 'spell-input wrong-anim';
-  wrong++;
-  const w = session[idx];
-  if (w) {
-    wrongWords[w.en] = { ja: w.ja, unit: w.unit, streak: 0, count: (wrongWords[w.en]?.count || 0) + 1 };
-    saveWrongWords(currentDeckName, wrongWords);
-  }
+  wrong++; recordWrong(session[idx]);
   const fb = document.getElementById('spell-feedback');
   fb.textContent = `✗ 正解: ${spellWord}`;
   fb.style.color = 'var(--red)';
