@@ -479,7 +479,7 @@ document.getElementById('file-input').addEventListener('change', function(e) {
         const rows = XLSX.utils.sheet_to_json(ws);
         const words = rows
           .filter(r => r['英単語'] && r['日本語の意味'])
-          .map(r => ({ unit: String(r['Unit'] || ''), en: String(r['英単語']).trim(), ja: String(r['日本語の意味']).trim() }));
+          .map(r => ({ unit: r['Unit'] != null ? String(r['Unit']).trim() : '', en: String(r['英単語']).trim(), ja: String(r['日本語の意味']).trim() }));
         if (!words.length) { alert(`「${file.name}」から単語データが見つかりませんでした。`); return; }
         const name = file.name.replace(/\.xlsx$/i, '');
         saveDeck(name, words);
@@ -510,9 +510,7 @@ function openDeck(name) {
 
   // モード選択画面の初期化
   document.getElementById('select-deck-name').textContent = name;
-  const units = [...new Set(allWords.map(w => w.unit))].filter(Boolean).sort();
-  const selUnit = document.getElementById('select-unit-filter');
-  selUnit.innerHTML = '<option value="">すべて</option>' + units.map(u => `<option value="${esc(u)}">${esc(u)}</option>`).join('');
+  fillUnitSelect(document.getElementById('select-unit-filter'));
 
   // 苦手単語モードカードの説明を更新
   const wwCount = Object.keys(wrongWords).length;
@@ -545,10 +543,8 @@ function startMode(m) {
   const dir  = document.getElementById('select-dir-filter').value;
   const ord  = document.getElementById('select-order-filter').value;
 
-  document.getElementById('test-title').textContent = currentDeckName;
-  const units = [...new Set(allWords.map(w => w.unit))].filter(Boolean).sort();
   const sel = document.getElementById('unit-filter');
-  sel.innerHTML = '<option value="">すべて</option>' + units.map(u => `<option value="${esc(u)}">${esc(u)}</option>`).join('');
+  fillUnitSelect(sel);
   sel.value = unit;
   document.getElementById('dir-filter').value = dir;
   document.getElementById('order-filter').value = ord;
@@ -556,6 +552,13 @@ function startMode(m) {
   document.getElementById('test-title').textContent = currentDeckName + (m === 'wrong' ? ' — 苦手単語' : '');
   showPage('page-test');
   setMode(m);
+}
+
+// Unit の選択肢を作る。数字は数値として並べる（Unit2 → Unit10 の順）
+function fillUnitSelect(sel) {
+  const units = [...new Set(allWords.map(w => w.unit))].filter(Boolean)
+    .sort((a, b) => a.localeCompare(b, 'ja', { numeric: true }));
+  sel.innerHTML = '<option value="">すべて</option>' + units.map(u => `<option value="${esc(u)}">${esc(u)}</option>`).join('');
 }
 
 function goHome() { stopTimer(); showPage('page-home'); renderDecks(); }
@@ -591,7 +594,8 @@ function saveAndQuit() {
   // 苦手モードはsessionがallWordsと独立しているのでそのまま保存
   const snap = {
     mode,
-    session: session.map(w => w.en), // 単語のenキーだけ保存してサイズを抑える
+    // 通常モードは allWords の位置で保存（同じ英単語が複数あっても区別できる）。苦手モードは en キー
+    session: session.map(w => mode === 'wrong' ? w.en : allWords.indexOf(w)),
     idx, correct, wrong,
     unit: document.getElementById('unit-filter').value,
     dir:  document.getElementById('dir-filter').value,
@@ -612,15 +616,14 @@ function resumeSession() {
   const pool = snap.mode === 'wrong'
     ? Object.keys(wrongWords).map(en => ({ en, ja: wrongWords[en].ja, unit: wrongWords[en].unit }))
     : allWords;
-  const enSet = new Set(snap.session);
+  // 数値は allWords の位置、文字列は以前の形式（en キー）
   const orderedWords = snap.session
-    .map(en => pool.find(w => w.en === en))
+    .map(k => typeof k === 'number' && snap.mode !== 'wrong' ? allWords[k] : pool.find(w => w.en === k))
     .filter(Boolean);
 
   // UIのフィルターを復元
-  const units = [...new Set(allWords.map(w => w.unit))].filter(Boolean).sort();
   const sel = document.getElementById('unit-filter');
-  sel.innerHTML = '<option value="">すべて</option>' + units.map(u => `<option value="${esc(u)}">${esc(u)}</option>`).join('');
+  fillUnitSelect(sel);
   sel.value = snap.unit || '';
   document.getElementById('dir-filter').value = snap.dir || 'en-ja';
   document.getElementById('order-filter').value = snap.order || 'seq';
@@ -750,14 +753,19 @@ function markAnswer(ok) {
 function skipCard() { if (!cur()) return; idx++; if (mode === 'wrong') showWrongCard(); else showCard(); }
 
 /* ---- クイズ ---- */
+// 正解 + 重複しないダミー3つをシャッフルして返す
+function buildOptions(ans) {
+  const pool = [...new Set(allWords.map(back))].filter(v => v !== ans)
+    .sort(() => Math.random() - 0.5).slice(0, 3);
+  return [...pool, ans].sort(() => Math.random() - 0.5);
+}
 function showQuiz(w) {
   quizAnswered = false;
   document.getElementById('quiz-question').textContent = front(w);
   document.getElementById('quiz-unit-tag').textContent = w.unit;
   document.getElementById('quiz-feedback').textContent = '';
   const ans = back(w);
-  const pool = allWords.filter(x => back(x) !== ans).sort(() => Math.random() - 0.5).slice(0, 3).map(x => back(x));
-  const opts = [...pool, ans].sort(() => Math.random() - 0.5);
+  const opts = buildOptions(ans);
   document.getElementById('quiz-options').innerHTML = opts.map((o, i) =>
     `<button class="option" data-val="${esc(o)}" onclick="answerQuiz(this)"><span style="font-size:11px;color:var(--text3);margin-right:4px;">${i+1}</span>${esc(o)}</button>`
   ).join('');
@@ -918,8 +926,7 @@ function showTimerCard() {
   document.getElementById('timer-feedback').textContent = '';
 
   const ans = back(w);
-  const pool = allWords.filter(x => back(x) !== ans).sort(() => Math.random() - 0.5).slice(0, 3).map(x => back(x));
-  const opts = [...pool, ans].sort(() => Math.random() - 0.5);
+  const opts = buildOptions(ans);
   document.getElementById('timer-options').innerHTML = opts.map((o, i) =>
     `<button class="option" data-val="${esc(o)}" onclick="answerTimer(this)"><span style="font-size:11px;color:var(--text3);margin-right:4px;">${i+1}</span>${esc(o)}</button>`
   ).join('');
@@ -1099,6 +1106,9 @@ function skipSpell() {
 renderDecks();
 
 /* ---- キーボードショートカット ---- */
+// 選択後にフォーカスを外し、そのままショートカットキーが使えるようにする
+document.querySelectorAll('select').forEach(s => s.addEventListener('change', () => s.blur()));
+
 document.addEventListener('keydown', e => {
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
   if (!document.getElementById('page-test').classList.contains('active')) return;
