@@ -15,6 +15,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>単語テスト</title>
+<script>
+  // 描画前にテーマを適用して、読み込み時のちらつきを防ぐ
+  try { const t = localStorage.getItem('vq_theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch(e) {}
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -25,16 +29,29 @@
   --green: #3B6D11; --green-bg: #EAF3DE;
   --red: #A32D2D; --red-bg: #FCEBEB;
   --radius: 8px; --radius-lg: 12px;
+  color-scheme: light;
 }
+/* テーマ: data-theme 未指定なら端末の設定に従う。light / dark を指定すると固定 */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #1c1c1a; --bg2: #252523; --bg3: #2e2e2b;
     --text: #f0ede8; --text2: #a0a09c; --text3: #6b6b68;
     --border: rgba(255,255,255,0.12); --border2: rgba(255,255,255,0.22);
     --green: #97C459; --green-bg: #173404;
     --red: #F09595; --red-bg: #501313;
+    color-scheme: dark;
   }
 }
+:root[data-theme="dark"] {
+  --bg: #1c1c1a; --bg2: #252523; --bg3: #2e2e2b;
+  --text: #f0ede8; --text2: #a0a09c; --text3: #6b6b68;
+  --border: rgba(255,255,255,0.12); --border2: rgba(255,255,255,0.22);
+  --green: #97C459; --green-bg: #173404;
+  --red: #F09595; --red-bg: #501313;
+  color-scheme: dark;
+}
+.topbar { margin-bottom: 0.75rem; }
+.theme-btn { font-size: 12px; padding: 4px 12px; color: var(--text2); }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 1.5rem 1rem; }
 .container { max-width: 640px; margin: 0 auto; }
 h1 { font-size: 20px; font-weight: 500; margin-bottom: 1.25rem; }
@@ -172,6 +189,10 @@ select { font-size: 13px; padding: 5px 10px; border-radius: var(--radius); borde
 </head>
 <body>
 <div class="container">
+
+  <div class="topbar">
+    <button class="theme-btn" id="theme-btn" onclick="cycleTheme()" title="テーマを切り替え"></button>
+  </div>
 
   <!-- ホーム画面 -->
   <div class="page active" id="page-home">
@@ -420,6 +441,21 @@ function getSavedSession(name) { const s = store(); return s[name]?.savedSession
 function saveSession(name, snap) { const s = store(); if (s[name]) { s[name].savedSession = snap; saveStore(s); } }
 function clearSavedSession(name) { const s = store(); if (s[name]) { delete s[name].savedSession; saveStore(s); } }
 
+/* ---- テーマ（自動 → ライト → ダーク の順に切り替え） ---- */
+const THEMES = { auto: '🌓 自動', light: '☀️ ライト', dark: '🌙 ダーク' };
+function currentTheme() { return document.documentElement.dataset.theme || 'auto'; }
+function applyTheme(t) {
+  if (t === 'auto') delete document.documentElement.dataset.theme;
+  else document.documentElement.dataset.theme = t;
+  try { localStorage.setItem('vq_theme', t); } catch(e) {}
+  document.getElementById('theme-btn').textContent = THEMES[t];
+}
+function cycleTheme() {
+  const order = ['auto', 'light', 'dark'];
+  applyTheme(order[(order.indexOf(currentTheme()) + 1) % order.length]);
+}
+document.getElementById('theme-btn').textContent = THEMES[currentTheme()];
+
 function esc(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 /* ---- ホーム ---- */
@@ -435,7 +471,7 @@ function renderDecks() {
     const total = s[k].words.length;
     const masteredCount = Object.keys(s[k].mastered || {}).length;
     const pct = total ? Math.round(masteredCount / total * 100) : 0;
-    const barColor = pct === 100 ? '#639922' : pct >= 50 ? '#3B6D11' : 'var(--green)';
+    const barColor = 'var(--green)'; // テーマに合わせた色を使う
     return `<div class="deck-card" data-name="${esc(k)}">
       <div class="deck-name">${esc(k)}</div>
       <div class="deck-meta">${total}単語 · ${d}</div>
