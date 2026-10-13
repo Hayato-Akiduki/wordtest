@@ -114,7 +114,8 @@ select { font-size: 13px; padding: 5px 10px; border-radius: var(--radius); borde
 .stat-label { font-size: 11px; color: var(--text2); margin-top: 2px; }
 .filters { display: flex; gap: 8px; margin-bottom: 1.25rem; flex-wrap: wrap; align-items: center; }
 .filters label { font-size: 13px; color: var(--text2); }
-.mode-tabs { display: flex; gap: 6px; margin-bottom: 1.25rem; }
+.mode-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1.25rem; }
+.mode-tabs .tab { white-space: nowrap; }
 .tab { font-size: 13px; padding: 6px 16px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: transparent; cursor: pointer; color: var(--text2); }
 .tab.active { background: var(--bg2); color: var(--text); font-weight: 500; }
 .progress-wrap { margin-bottom: 1.25rem; }
@@ -184,6 +185,23 @@ select { font-size: 13px; padding: 5px 10px; border-radius: var(--radius); borde
 .spell-input.wrong-anim  { border-color: var(--red);   background: var(--red-bg); }
 .spell-feedback { text-align: center; min-height: 26px; font-size: 14px; margin-bottom: 0.75rem; }
 .spell-hint-btn { font-size: 12px; padding: 4px 12px; }
+
+/* スマホ・タブレット */
+button, .option, .card, .mode-card, .deck-card, .upload-area { touch-action: manipulation; } /* ダブルタップ拡大を防ぐ */
+.hint-touch { display: none; }
+@media (hover: none) {
+  /* タッチ端末ではキーボード操作の説明を出さない */
+  .hint-kbd { display: none; }
+  .hint-touch { display: inline; }
+}
+@media (max-width: 480px) {
+  /* iPhone で入力欄をタップしたときに画面が拡大されないよう 16px 以上にする */
+  select, .list-search { font-size: 16px; }
+  .stats { gap: 6px; }
+  .stat { padding: 0.6rem 0.25rem; }
+  .stat-num { font-size: 20px; }
+  .tab { padding: 6px 12px; }
+}
 
 </style>
 </head>
@@ -337,7 +355,7 @@ select { font-size: 13px; padding: 5px 10px; border-radius: var(--radius); borde
           <div class="face">
             <div class="word" id="flash-front">-</div>
             <div class="unit-tag" id="flash-unit"></div>
-            <div class="hint">クリック / Space で答えを見る &nbsp;·&nbsp; ← 不正解 &nbsp; → 正解 &nbsp; ↓ スキップ</div>
+            <div class="hint"><span class="hint-kbd">クリック / Space で答えを見る &nbsp;·&nbsp; ← 不正解 &nbsp; → 正解 &nbsp; ↓ スキップ</span><span class="hint-touch">タップで答えを見る</span></div>
           </div>
           <div class="face face-back">
             <div class="meaning" id="flash-back">-</div>
