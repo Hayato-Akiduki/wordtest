@@ -57,6 +57,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 h1 { font-size: 20px; font-weight: 500; margin-bottom: 1.25rem; }
 button { font-family: inherit; font-size: 13px; padding: 7px 16px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: transparent; cursor: pointer; color: var(--text); transition: background 0.1s, transform 0.05s; }
 button:hover { background: var(--bg2); }
+:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
 button:active { transform: scale(0.97); }
 select { font-size: 13px; padding: 5px 10px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: var(--bg); color: var(--text); cursor: pointer; }
 .page { display: none; }
@@ -64,11 +65,11 @@ select { font-size: 13px; padding: 5px 10px; border-radius: var(--radius); borde
 
 /* ホーム */
 .notice { font-size: 12px; color: var(--text2); background: var(--bg2); border-radius: var(--radius); padding: 8px 12px; margin-bottom: 1.25rem; line-height: 1.5; }
-.upload-area { border: 1.5px dashed var(--border2); border-radius: var(--radius-lg); padding: 2rem 1.5rem; text-align: center; cursor: pointer; background: var(--bg2); transition: background 0.15s; margin-bottom: 1.5rem; }
+.upload-area { display: block; width: 100%; border: 1.5px dashed var(--border2); border-radius: var(--radius-lg); padding: 2rem 1.5rem; text-align: center; cursor: pointer; background: var(--bg2); transition: background 0.15s; margin-bottom: 1.5rem; }
 .upload-area:hover { background: var(--bg3); }
-.upload-icon { font-size: 36px; margin-bottom: 0.5rem; }
-.upload-text { font-size: 14px; color: var(--text2); margin-bottom: 0.3rem; }
-.upload-hint { font-size: 12px; color: var(--text3); }
+.upload-icon { display: block; font-size: 36px; margin-bottom: 0.5rem; }
+.upload-text { display: block; font-size: 14px; color: var(--text2); margin-bottom: 0.3rem; }
+.upload-hint { display: block; font-size: 12px; color: var(--text3); }
 .format-help { font-size: 13px; color: var(--text2); background: var(--bg2); border-radius: var(--radius); padding: 10px 14px; margin: -0.75rem 0 1.5rem; }
 .format-help summary { cursor: pointer; font-weight: 500; color: var(--text); }
 .format-help p { margin: 8px 0; line-height: 1.6; }
@@ -88,19 +89,20 @@ select { font-size: 13px; padding: 5px 10px; border-radius: var(--radius); borde
 .select-header { display: flex; align-items: center; gap: 10px; margin-bottom: 2rem; }
 .select-deck-name { font-size: 16px; font-weight: 500; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mode-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1.5rem; }
-.mode-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.1rem; cursor: pointer; display: flex; align-items: flex-start; gap: 1rem; transition: border-color 0.15s, background 0.15s; }
-.mode-card:hover { background: var(--bg2); border-color: var(--border2); }
+.mode-card { text-align: left; background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.1rem; cursor: pointer; display: flex; align-items: flex-start; gap: 1rem; transition: border-color 0.15s, background 0.15s; }
+.mode-card:disabled { opacity: 0.45; cursor: default; }
+.mode-card:not(:disabled):hover { background: var(--bg2); border-color: var(--border2); }
 .mode-card-icon { font-size: 28px; flex-shrink: 0; }
 .mode-card-body { flex: 1; }
-.mode-card-title { font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 3px; }
-.mode-card-desc { font-size: 12px; color: var(--text2); line-height: 1.5; }
+.mode-card-title { display: block; font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 3px; }
+.mode-card-desc { display: block; font-size: 12px; color: var(--text2); line-height: 1.5; }
 .select-unit-row { display: flex; gap: 8px; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; }
 .select-unit-row label { font-size: 13px; color: var(--text2); }
 /* 再開カード */
-.resume-card { background: var(--bg); border: 1.5px solid var(--green); border-radius: var(--radius-lg); padding: 1.1rem 1.5rem; cursor: pointer; display: flex; align-items: center; gap: 1rem; transition: background 0.15s; margin-bottom: 1rem; }
-.resume-card:hover { background: var(--green-bg); }
-.resume-card-body { flex: 1; }
-.resume-card-title { font-size: 15px; font-weight: 500; color: var(--green); margin-bottom: 3px; }
+.resume-card { background: var(--bg); border: 1.5px solid var(--green); border-radius: var(--radius-lg); padding: 1.1rem 1.5rem; display: flex; align-items: center; gap: 1rem; transition: background 0.15s; margin-bottom: 1rem; }
+.resume-card:focus-within, .resume-card:hover { background: var(--green-bg); }
+.resume-card-body { flex: 1; border: 0; padding: 0; text-align: left; }
+.resume-card-title { display: block; font-size: 15px; font-weight: 500; color: var(--green); margin-bottom: 3px; }
 .resume-card-desc { font-size: 12px; color: var(--text2); }
 .resume-card-discard { font-size: 12px; padding: 4px 10px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: transparent; cursor: pointer; color: var(--text3); flex-shrink: 0; }
 .resume-card-discard:hover { color: var(--red); border-color: var(--red); background: var(--red-bg); }
@@ -246,12 +248,12 @@ button, .option, .card, .mode-card, .deck-card, .upload-area { touch-action: man
   <div class="page active" id="page-home">
     <h1>単語テスト</h1>
     <div class="notice">XLSXを読み込むとブラウザに保存され、次回以降ファイルのロードしなくても使えます。ファイルごとに独立してテストできます。</div>
-    <div class="upload-area" onclick="document.getElementById('file-input').click()">
-      <input type="file" id="file-input" accept=".xlsx" style="display:none" multiple>
-      <div class="upload-icon">📂</div>
-      <div class="upload-text">クリックしてXLSXファイルを選択（複数可）</div>
-      <div class="upload-hint">英単語のまとめられたファイルを読み込ませてください</div>
-    </div>
+    <input type="file" id="file-input" accept=".xlsx" hidden multiple>
+    <button class="upload-area" onclick="document.getElementById('file-input').click()">
+      <span class="upload-icon">📂</span>
+      <span class="upload-text">クリックしてXLSXファイルを選択（複数可）</span>
+      <span class="upload-hint">英単語のまとめられたファイルを読み込ませてください</span>
+    </button>
     <details class="format-help" id="format-help">
       <summary>読み込めるファイルの形式</summary>
       <p>1枚目のシートの1行目に、次の3つの見出しを入れてください。2行目から単語を1行ずつ書きます。Unit は空欄でもかまいません。</p>
@@ -290,65 +292,56 @@ button, .option, .card, .mode-card, .deck-card, .upload-area { touch-action: man
     </div>
     <!-- 再開カード（保存済みセッションがあるとき表示） -->
     <div id="resume-area" style="display:none;">
-      <div class="resume-card" onclick="resumeSession()">
-        <div class="resume-card-body">
-          <div class="resume-card-title">▶ 前回の続きから再開</div>
-          <div class="resume-card-desc" id="resume-desc"></div>
-        </div>
-        <button class="resume-card-discard" onclick="event.stopPropagation(); discardSavedSession()">破棄</button>
+      <div class="resume-card">
+        <button class="resume-card-body" onclick="resumeSession()" aria-describedby="resume-desc">
+          <span class="resume-card-title">▶ 前回の続きから再開</span>
+          <span class="resume-card-desc" id="resume-desc"></span>
+        </button>
+        <button class="resume-card-discard" onclick="discardSavedSession()">破棄</button>
       </div>
     </div>
     <div class="mode-cards">
-      <div class="mode-card" onclick="startMode('flash')">
-<!--
-        <div class="mode-card-icon">🃏</div> 
--->
-        <div class="mode-card-body">
-          <div class="mode-card-title">フラッシュカード</div>
-          <div class="mode-card-desc">カードをめくって意味を確認。自分で正解・不正解を判断します</div>
-        </div>
-      </div>
-      <div class="mode-card" onclick="startMode('quiz')">
-<!--
-        <div class="mode-card-icon">✏️</div>
--->
-        <div class="mode-card-body">
-          <div class="mode-card-title">4択クイズ</div>
-          <div class="mode-card-desc">4つの選択肢から正解を選びます。</div>
-        </div>
-      </div>
-      <div class="mode-card" onclick="startMode('list')">
-<!--
-        <div class="mode-card-icon">📋</div>
--->
-        <div class="mode-card-body">
-          <div class="mode-card-title">一覧</div>
-          <div class="mode-card-desc">単語と意味を一覧表示。検索や絞り込みができます</div>
-        </div>
-      </div>
-      <div class="mode-card" onclick="startMode('timer')">
-        <div class="mode-card-body">
-          <div class="mode-card-title">タイムアタック</div>
-          <div class="mode-card-desc">5秒以内に4択から正解を選びます。時間切れは不正解になります</div>
-        </div>
-      </div>
-      <div class="mode-card" onclick="startMode('spell')">
-        <div class="mode-card-body">
-          <div class="mode-card-title">綴り入力</div>
-          <div class="mode-card-desc">意味を見て英単語を入力します。最初の文字など少しヒントあり</div>
-        </div>
-      </div>
-      <div class="mode-card" id="wrong-mode-card" onclick="startMode('wrong')">
-        <div class="mode-card-body">
-          <div class="mode-card-title">⚠️ 苦手単語モード</div>
-          <div class="mode-card-desc" id="wrong-mode-desc">不正解した単語だけを集めて出題します</div>
-        </div>
-      </div>
+      <button class="mode-card" onclick="startMode('flash')">
+        <span class="mode-card-body">
+          <span class="mode-card-title">フラッシュカード</span>
+          <span class="mode-card-desc">カードをめくって意味を確認。自分で正解・不正解を判断します</span>
+        </span>
+      </button>
+      <button class="mode-card" onclick="startMode('quiz')">
+        <span class="mode-card-body">
+          <span class="mode-card-title">4択クイズ</span>
+          <span class="mode-card-desc">4つの選択肢から正解を選びます。</span>
+        </span>
+      </button>
+      <button class="mode-card" onclick="startMode('list')">
+        <span class="mode-card-body">
+          <span class="mode-card-title">一覧</span>
+          <span class="mode-card-desc">単語と意味を一覧表示。検索や絞り込みができます</span>
+        </span>
+      </button>
+      <button class="mode-card" onclick="startMode('timer')">
+        <span class="mode-card-body">
+          <span class="mode-card-title">タイムアタック</span>
+          <span class="mode-card-desc">5秒以内に4択から正解を選びます。時間切れは不正解になります</span>
+        </span>
+      </button>
+      <button class="mode-card" onclick="startMode('spell')">
+        <span class="mode-card-body">
+          <span class="mode-card-title">綴り入力</span>
+          <span class="mode-card-desc">意味を見て英単語を入力します。最初の文字など少しヒントあり</span>
+        </span>
+      </button>
+      <button class="mode-card" id="wrong-mode-card" onclick="startMode('wrong')">
+        <span class="mode-card-body">
+          <span class="mode-card-title">⚠️ 苦手単語モード</span>
+          <span class="mode-card-desc" id="wrong-mode-desc">不正解した単語だけを集めて出題します</span>
+        </span>
+      </button>
     </div>
   </div>
 
   <!-- テスト画面 -->
-  <div class="page" id="page-test">
+  <div class="page" id="page-test" tabindex="-1">
     <div class="test-header">
       <button onclick="backToSelect()">← 戻る</button>
       <div class="test-title-wrap">
@@ -409,6 +402,7 @@ button, .option, .card, .mode-card, .deck-card, .upload-area { touch-action: man
         </div>
       </div>
       <div class="controls">
+        <button onclick="flipCard()">カードをめくる</button>
         <button class="btn-danger" onclick="markAnswer(false)">✗ 不正解</button>
         <button onclick="skipCard()">→ スキップ</button>
         <button class="btn-success" onclick="markAnswer(true)">✓ 正解</button>
@@ -502,7 +496,8 @@ button, .option, .card, .mode-card, .deck-card, .upload-area { touch-action: man
 
     <div class="controls" id="test-controls" style="margin-top:0.25rem;">
       <button onclick="setMode(mode)">↺ リセット</button>
-      <button onclick="saveAndQuit()" id="save-quit-btn">💾 中断して保存</button>
+      <button onclick="saveAndQuit()" id="save-quit-btn" aria-keyshortcuts="Control+Shift+S Meta+Shift+S">💾 中断して保存</button>
+      <span class="hint hint-kbd">Ctrl / &#8984; + Shift + S</span>
     </div>
   </div>
 
@@ -510,7 +505,7 @@ button, .option, .card, .mode-card, .deck-card, .upload-area { touch-action: man
 <script>
 /* ---- ストレージ ---- */
 function store() { try { return JSON.parse(localStorage.getItem('vq_store2') || '{}'); } catch(e) { return {}; } }
-function saveStore(s) { try { localStorage.setItem('vq_store2', JSON.stringify(s)); } catch(e) {} }
+function saveStore(s) { try { localStorage.setItem('vq_store2', JSON.stringify(s)); return true; } catch(e) { return false; } }
 function saveDeck(name, words) { const s = store(); s[name] = { words, saved: Date.now(), mastered: s[name]?.mastered || {}, wrongWords: s[name]?.wrongWords || {} }; saveStore(s); }
 function deleteDeck(name) { const s = store(); delete s[name]; saveStore(s); renderDecks(); }
 
@@ -519,7 +514,7 @@ function saveMastered(name, mastered) { const s = store(); if (s[name]) { s[name
 function getWrongWords(name) { const s = store(); return s[name]?.wrongWords || {}; }
 function saveWrongWords(name, ww) { const s = store(); if (s[name]) { s[name].wrongWords = ww; saveStore(s); } }
 function getSavedSession(name) { const s = store(); return s[name]?.savedSession || null; }
-function saveSession(name, snap) { const s = store(); if (s[name]) { s[name].savedSession = snap; saveStore(s); } }
+function saveSession(name, snap) { const s = store(); if (s[name]) { s[name].savedSession = snap; return saveStore(s); } return false; }
 function clearSavedSession(name) { const s = store(); if (s[name]) { delete s[name].savedSession; saveStore(s); } }
 
 /* ---- テーマ（自動 → ライト → ダーク の順に切り替え） ---- */
@@ -648,6 +643,7 @@ let currentDeckName = '', mastered = {}, wrongWords = {};
 const MODE_LABELS = { flash:'フラッシュカード', quiz:'4択クイズ', timer:'タイムアタック', spell:'綴り入力', wrong:'苦手単語', list:'一覧' };
 
 function openDeck(name) {
+  resumedSavedAt = null;
   const s = store();
   if (!s[name]) return;
   allWords = s[name].words;
@@ -665,10 +661,10 @@ function openDeck(name) {
   const card = document.getElementById('wrong-mode-card');
   if (wwCount > 0) {
     desc.textContent = `現在 ${wwCount} 単語が苦手リストにあります`;
-    card.style.opacity = '1'; card.style.pointerEvents = '';
+    card.disabled = false;
   } else {
     desc.textContent = '苦手単語がまだありません。他のモードで練習しましょう';
-    card.style.opacity = '0.45'; card.style.pointerEvents = 'none';
+    card.disabled = true;
   }
   // 再開カードの表示
   const snap = getSavedSession(name);
@@ -728,7 +724,16 @@ function backToSelect() {
 
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+  const page = document.getElementById(id);
+  page.classList.add('active');
+  if (id === 'page-test') page.focus();
+  else if (id === 'page-select') {
+    const resumeArea = document.getElementById('resume-area');
+    const action = resumeArea.style.display === 'none'
+      ? page.querySelector('.mode-card')
+      : resumeArea.querySelector('.resume-card-body');
+    action.focus();
+  } else if (id === 'page-home') page.querySelector('.upload-area').focus();
 }
 
 /* ---- セッション ---- */
@@ -740,20 +745,23 @@ function getFiltered() {
 }
 
 function startSession() {
-  clearSavedSession(currentDeckName);
   session = getFiltered(); idx = 0; correct = 0; wrong = 0; missed = [];
   updateStats(); showCard();
 }
 
-// 中断保存用: 通常モードは allWords の位置（同じ英単語が複数あっても区別できる）、苦手モードは en キー
-function toKey(w) { return mode === 'wrong' ? w.en : allWords.indexOf(w); }
-function fromKeys(keys, m) {
+// 中断保存用: 通常モードは allWords の位置、苦手モードは単語のコピー
+function toSavedWord(w) { return mode === 'wrong' ? w : allWords.indexOf(w); }
+function fromSavedWords(keys, m) {
   const pool = m === 'wrong'
     ? Object.keys(wrongWords).map(en => ({ en, ja: wrongWords[en].ja, unit: wrongWords[en].unit }))
     : allWords;
   // 数値は allWords の位置、文字列は以前の形式（en キー）
   return (keys || [])
-    .map(k => typeof k === 'number' && m !== 'wrong' ? allWords[k] : pool.find(w => w.en === k))
+    .map(key => {
+      if (m === 'wrong' && key && typeof key === 'object') return key;
+      if (typeof key === 'number') return allWords[key];
+      return pool.find(w => w.en === key);
+    })
     .filter(Boolean);
 }
 
@@ -766,8 +774,14 @@ function showCurrent() {
 }
 
 /* ---- 結果画面 ---- */
+let resumedSavedAt = null;
+
 function showResult() {
   stopTimer();
+  if (resumedSavedAt !== null && getSavedSession(currentDeckName)?.savedAt === resumedSavedAt) {
+    clearSavedSession(currentDeckName);
+  }
+  resumedSavedAt = null;
   ['flash','quiz','timer','spell','list'].forEach(id => { document.getElementById('mode-'+id).style.display = 'none'; });
   document.getElementById('test-controls').style.display = 'none';
   document.getElementById('result-panel').style.display = 'block';
@@ -784,12 +798,12 @@ function showResult() {
       <td class="word-en">${esc(w.en)}${speakBtn(w.en)}</td>
       <td class="word-ja">${esc(w.ja)}</td>
     </tr>`).join('')}</tbody></table>` : '<div style="font-size:14px;color:var(--green);">全問正解です 🎉</div>';
+  document.querySelector('#result-panel button:not([style*="none"])').focus();
 }
 
 function retryMissed() {
   const words = [...missed];
   setModeUI(mode);
-  clearSavedSession(currentDeckName);
   session = words; idx = 0; correct = 0; wrong = 0; missed = [];
   updateStats(); showCurrent();
 }
@@ -797,26 +811,35 @@ function retryMissed() {
 function saveAndQuit() {
   if (mode === 'list') { showPage('page-select'); return; }
   // 最後まで終わっているセッションは保存しない
-  if (idx >= session.length) { clearSavedSession(currentDeckName); backToSelect(); return; }
+  if (idx >= session.length) { if (session.length) showResult(); return; }
   const snap = {
     mode,
-    session: session.map(toKey),
-    missed: missed.map(toKey),
+    session: session.map(toSavedWord),
+    missed: missed.map(toSavedWord),
     idx, correct, wrong,
     unit: document.getElementById('unit-filter').value,
     dir:  document.getElementById('dir-filter').value,
     order: document.getElementById('order-filter').value,
+    flipped: (mode === 'flash' || mode === 'wrong') && flipped && !pendingNext,
+    spell: mode === 'spell' && !spellAnswered ? {
+      value: document.getElementById('spell-input').value,
+      hintLevel: spellHintLevel,
+      retry: spellIsRetry
+    } : null,
     savedAt: Date.now()
   };
-  saveSession(currentDeckName, snap);
+  if (!saveSession(currentDeckName, snap)) {
+    alert('途中経過をブラウザに保存できませんでした。');
+    return;
+  }
   stopTimer();
-  showPage('page-select');
   openDeck(currentDeckName); // 再開カードを更新して選択画面へ
 }
 
 function resumeSession() {
   const snap = getSavedSession(currentDeckName);
   if (!snap) return;
+  resumedSavedAt = snap.savedAt;
 
   // UIのフィルターを復元
   const sel = document.getElementById('unit-filter');
@@ -831,20 +854,29 @@ function resumeSession() {
   // 状態を直接復元（session は単語オブジェクトに戻す）
   stopTimer();
   mode = snap.mode;
-  session = fromKeys(snap.session, snap.mode);
-  missed = fromKeys(snap.missed, snap.mode);
+  session = fromSavedWords(snap.session, snap.mode);
+  missed = fromSavedWords(snap.missed, snap.mode);
   idx = snap.idx;
   correct = snap.correct;
   wrong = snap.wrong;
 
   setModeUI(mode);
   updateStats();
+  flipped = false;
   showCurrent();
+  if (cur() && snap.flipped && (mode === 'flash' || mode === 'wrong')) flipCard();
+  if (cur() && mode === 'spell' && snap.spell) {
+    const draft = snap.spell;
+    document.getElementById('spell-input').value = draft.value;
+    spellHintLevel = draft.hintLevel;
+    spellIsRetry = draft.retry;
+    document.getElementById('spell-hint').textContent = buildHint(spellWord, spellHintLevel);
+  }
 }
 
 function discardSavedSession() {
   clearSavedSession(currentDeckName);
-  document.getElementById('resume-area').style.display = 'none';
+  openDeck(currentDeckName);
 }
 
 // フィルター変更時は現在のモードでセッションをやり直す
@@ -915,13 +947,14 @@ function showFlash(w) {
     document.getElementById('flash-front').textContent = '';
     document.getElementById('flash-back').textContent = '';
     card.classList.remove('flipped');
-    setTimeout(doSet, 460);
+    scheduleNext(doSet, 460);
   } else {
     doSet();
   }
 }
-function flipCard() { flipped = !flipped; document.getElementById('flash-card').classList.toggle('flipped', flipped); }
+function flipCard() { if (!cur() || pendingNext) return; flipped = !flipped; document.getElementById('flash-card').classList.toggle('flipped', flipped); }
 function markAnswer(ok) {
+  if (pendingNext) return;
   const w = session[idx];
   if (!w) return; // 完了後は何もしない
   if (ok) { correct++; recordCorrect(w); }
@@ -929,7 +962,7 @@ function markAnswer(ok) {
   idx++;
   if (mode === 'wrong') showWrongCard(); else showCard();
 }
-function skipCard() { if (!cur()) return; idx++; if (mode === 'wrong') showWrongCard(); else showCard(); }
+function skipCard() { if (!cur() || pendingNext) return; idx++; if (mode === 'wrong') showWrongCard(); else showCard(); }
 
 /* ---- クイズ ---- */
 // 正解 + 重複しないダミー3つをシャッフルして返す
@@ -979,6 +1012,7 @@ let awaitNext = null;
 function waitForNext(fb, msg, fn) {
   fb.innerHTML = `${esc(msg)}<button class="next-btn" onclick="goNext()">次へ →</button>`;
   awaitNext = fn;
+  if (document.activeElement.closest('.option')) fb.querySelector('.next-btn').focus();
 }
 function goNext() {
   const fn = awaitNext;
@@ -1008,6 +1042,8 @@ function setModeUI(m) {
 
 function setMode(m) {
   stopTimer();
+  resumedSavedAt = null;
+  flipped = false;
   mode = m;
   setModeUI(m);
   if (m === 'list') renderList();
@@ -1019,7 +1055,6 @@ function setMode(m) {
 
 /* ---- 苦手単語モード ---- */
 function startWrongSession() {
-  clearSavedSession(currentDeckName);
   const wwKeys = Object.keys(wrongWords);
   if (!wwKeys.length) {
     document.getElementById('flash-front').textContent = '苦手単語がありません 🎉';
@@ -1057,7 +1092,7 @@ function showWrongCard() {
     document.getElementById('flash-front').textContent = '';
     document.getElementById('flash-back').textContent = '';
     card.classList.remove('flipped');
-    setTimeout(doSet, 460);
+    scheduleNext(doSet, 460);
   } else {
     doSet();
   }
@@ -1104,7 +1139,6 @@ function stopTimer() {
 
 function startTimerSession() {
   stopTimer();
-  clearSavedSession(currentDeckName);
   session = getFiltered(); idx = 0; correct = 0; wrong = 0; missed = [];
   updateStats(); showTimerCard();
 }
@@ -1170,7 +1204,9 @@ function timeoutTimer(w, ans) {
   idx++; updateStats();
   document.getElementById('timeout-word').textContent = front(w);
   document.getElementById('timeout-answer').textContent = '正解: ' + ans;
-  document.getElementById('timeout-overlay').style.display = 'flex';
+  const overlay = document.getElementById('timeout-overlay');
+  overlay.style.display = 'flex';
+  overlay.querySelector('button').focus();
 }
 
 function dismissTimeout() {
@@ -1182,7 +1218,6 @@ function dismissTimeout() {
 let spellHintLevel = 0, spellWord = '', spellAnswered = false, spellIsRetry = false;
 
 function startSpellSession() {
-  clearSavedSession(currentDeckName);
   session = getFiltered(); idx = 0; correct = 0; wrong = 0; missed = [];
   updateStats(); showSpellCard();
 }
@@ -1249,7 +1284,7 @@ function onSpellInput() {
 }
 
 function onSpellKey(e) {
-  if (e.key !== 'Enter') return;
+  if (e.key !== 'Enter' || e.isComposing) return;
   checkSpell();
 }
 
@@ -1263,7 +1298,8 @@ function checkSpell() {
   spellAnswered = true;
   const inp = document.getElementById('spell-input');
   inp.className = 'spell-input wrong-anim';
-  wrong++; recordWrong(session[idx]);
+  if (!spellIsRetry) { wrong++; recordWrong(session[idx]); }
+  spellIsRetry = false;
   const fb = document.getElementById('spell-feedback');
   fb.textContent = `✗ 正解: ${spellWord}`;
   fb.style.color = 'var(--red)';
@@ -1303,7 +1339,8 @@ function skipSpell() {
   if (!spellAnswered) {
     if (!cur()) return; // 完了後は何もしない
     if (!missed.includes(cur())) missed.push(cur()); // 結果画面の「間違えた単語」に含める
-    wrong++; idx++; updateStats();
+    if (!spellIsRetry) wrong++;
+    idx++; updateStats();
   }
   showSpellCard();
 }
@@ -1348,12 +1385,17 @@ document.getElementById('format-help').open = !Object.keys(store()).length;
 })();
 
 /* ---- キーボードショートカット ---- */
-// 選択後にフォーカスを外し、そのままショートカットキーが使えるようにする
-document.querySelectorAll('select').forEach(s => s.addEventListener('change', () => s.blur()));
-
 document.addEventListener('keydown', e => {
-  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
-  if (!document.getElementById('page-test').classList.contains('active')) return;
+  if (!document.getElementById('page-test').classList.contains('active') || e.isComposing) return;
+  const saveButton = document.getElementById('save-quit-btn');
+  if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.code === 'KeyS' && saveButton.getClientRects().length) {
+    e.preventDefault();
+    if (!e.repeat) saveAndQuit();
+    return;
+  }
+  if (e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
+  if (document.getElementById('result-panel').style.display === 'block') return;
+  if (e.target.closest?.('input, textarea, select, button, summary, a')) return;
 
   // タイムアウトオーバーレイ中
   if (document.getElementById('timeout-overlay').style.display !== 'none') {
@@ -1361,11 +1403,11 @@ document.addEventListener('keydown', e => {
     return;
   }
 
-  if (mode === 'flash' || mode === 'wrong') {
+  if ((mode === 'flash' || mode === 'wrong') && cur()) {
     if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); flipCard(); }
-    if (e.key === 'ArrowRight' || e.key === 'o') markAnswer(true);
-    if (e.key === 'ArrowLeft'  || e.key === 'x') markAnswer(false);
-    if (e.key === 'ArrowDown'  || e.key === 's') skipCard();
+    if (e.key === 'ArrowRight' || e.key === 'o') { e.preventDefault(); markAnswer(true); }
+    if (e.key === 'ArrowLeft'  || e.key === 'x') { e.preventDefault(); markAnswer(false); }
+    if (e.key === 'ArrowDown'  || e.key === 's') { e.preventDefault(); skipCard(); }
   }
   if ((mode === 'quiz' || mode === 'timer') && awaitNext) {
     if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); goNext(); }
