@@ -457,7 +457,7 @@ button, .option, .card, .mode-card, .deck-card, .upload-area { touch-action: man
           placeholder="英単語を入力..." oninput="onSpellInput()" onkeydown="onSpellKey(event)">
         <button class="spell-hint-btn" onclick="revealMoreHint()">ヒント+</button>
       </div>
-      <div class="spell-feedback" id="spell-feedback"></div>
+      <div class="spell-feedback" id="spell-feedback" role="status"></div>
       <div class="spell-answer-row"><button class="speak-btn" id="speak-spell" onclick="speak(this.dataset.say)" title="発音を聞く" style="display:none;">🔊</button></div>
       <div class="controls" style="margin-bottom:0;">
         <button id="spell-check-btn" class="btn-success" onclick="checkSpell()">✓ 答え合わせ</button>
@@ -1284,8 +1284,14 @@ function onSpellInput() {
 }
 
 function onSpellKey(e) {
-  if (e.key !== 'Enter' || e.isComposing) return;
-  checkSpell();
+  if (e.key !== 'Enter' || e.isComposing || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+  e.preventDefault();
+  if (document.getElementById('spell-retry-btn').style.display !== 'none') {
+    if (e.shiftKey) skipSpell();
+    else retrySpell();
+  } else if (!e.shiftKey) {
+    checkSpell();
+  }
 }
 
 // 答え合わせ（Enter キーまたは「答え合わせ」ボタン）
@@ -1301,7 +1307,7 @@ function checkSpell() {
   if (!spellIsRetry) { wrong++; recordWrong(session[idx]); }
   spellIsRetry = false;
   const fb = document.getElementById('spell-feedback');
-  fb.textContent = `✗ 正解: ${spellWord}`;
+  fb.textContent = `✗ 正解: ${spellWord}（Enter でもう一度、Shift＋Enter で次へ）`;
   fb.style.color = 'var(--red)';
   document.getElementById('spell-hint').textContent = spellWord;
   // idx は進めて、「もう一度」ボタンを表示（押すと idx を戻して再挑戦）
@@ -1309,6 +1315,7 @@ function checkSpell() {
   document.getElementById('spell-retry-btn').style.display = '';
   document.getElementById('spell-check-btn').style.display = 'none';
   setSpeak('speak-spell', spellWord);
+  inp.focus();
 }
 
 function retrySpell() {
@@ -1331,7 +1338,7 @@ function retrySpell() {
   // 再挑戦で正解しても correct には加算しないフラグ
   spellIsRetry = true;
   updateStats();
-  setTimeout(() => inp.focus(), 50);
+  inp.focus();
 }
 
 function skipSpell() {
