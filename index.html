@@ -53,7 +53,7 @@
 .topbar { margin-bottom: 0.75rem; }
 .theme-btn { font-size: 12px; padding: 4px 12px; color: var(--text2); }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 1.5rem 1rem; }
-.container { max-width: 640px; margin: 0 auto; }
+.container { max-width: 640px; margin: 0 auto; min-height: calc(100vh - 3rem); min-height: calc(100dvh - 3rem); display: flex; flex-direction: column; }
 button { font-family: inherit; font-size: 13px; padding: 7px 16px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: transparent; cursor: pointer; color: var(--text); transition: background 0.1s, transform 0.05s; }
 button:hover { background: var(--bg2); }
 :focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
@@ -63,12 +63,16 @@ select { font-size: 13px; padding: 5px 10px; border-radius: var(--radius); borde
 .page.active { display: block; }
 
 /* ホーム */
+#page-home.active { display: flex; flex: 1; flex-direction: column; }
 .home-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 1.75rem; }
 .home-header h1 { font-size: 28px; font-weight: 700; }
 .home-primary { min-height: 40px; padding: 8px 14px; background: var(--green); color: var(--bg); border: 1px solid transparent; font-weight: 600; }
 .home-primary:hover { background: var(--green-bg); color: var(--green); border-color: var(--green); }
+#add-deck-btn { background: #b54708; color: #fff; }
+#add-deck-btn:hover { background: #93370d; border-color: transparent; }
 .home-empty { background: var(--bg2); border: 1px dashed var(--border2); border-radius: var(--radius-lg); padding: 1.25rem; font-size: 14px; color: var(--text2); line-height: 1.6; }
-.format-help { font-size: 14px; color: var(--text2); background: var(--bg2); border-radius: var(--radius); padding: 10px 14px; margin-top: 1.25rem; }
+.home-footer { margin-top: auto; padding-top: 1.25rem; }
+.format-help { font-size: 14px; color: var(--text2); background: var(--bg2); border-radius: var(--radius); padding: 10px 14px; }
 .format-help summary { cursor: pointer; font-weight: 500; color: var(--text); }
 .format-help p { margin: 8px 0; line-height: 1.6; }
 .format-table { border-collapse: collapse; margin-bottom: 10px; background: var(--bg); font-size: 12px; }
@@ -257,16 +261,18 @@ button, .option, .card, .mode-card { touch-action: manipulation; } /* ダブル�
       <p class="home-empty" id="decks-empty">単語帳がまだありません。「ファイルを追加」から XLSX を選ぶと、このブラウザに保存されます。</p>
       <div class="deck-grid" id="deck-grid"></div>
     </section>
-    <details class="format-help" id="format-help">
-      <summary>XLSX の形式と見本ファイル</summary>
-      <p>1枚目のシートの1行目に、次の3つの見出しを入れてください。2行目から単語を1行ずつ書きます。Unit は空欄でもかまいません。</p>
-      <table class="format-table">
-        <tr><th>Unit</th><th>英単語</th><th>日本語の意味</th></tr>
-        <tr><td>1</td><td>apple</td><td>りんご</td></tr>
-        <tr><td>1</td><td>run</td><td>走る</td></tr>
-      </table>
-      <button onclick="downloadTemplate()">📄 見本ファイルをダウンロード</button>
-    </details>
+    <footer class="home-footer">
+      <details class="format-help" id="format-help">
+        <summary>XLSX の形式と見本ファイル</summary>
+        <p>1枚目のシートの1行目に、次の3つの見出しを入れてください。2行目から単語を1行ずつ書きます。Unit は空欄でもかまいません。</p>
+        <table class="format-table">
+          <tr><th>Unit</th><th>英単語</th><th>日本語の意味</th></tr>
+          <tr><td>1</td><td>apple</td><td>りんご</td></tr>
+          <tr><td>1</td><td>run</td><td>走る</td></tr>
+        </table>
+        <button onclick="downloadTemplate()">📄 見本ファイルをダウンロード</button>
+      </details>
+    </footer>
   </div>
 
   <!-- モード選択画面 -->
